@@ -178,7 +178,7 @@ const Pages = {
           <div class="nm">${esc(ex.name_zh)}</div>
           <div class="sub">${zh(ex.equipment)} · ${zh(ex.target)}</div>
         </div>
-        <div class="tag">${zh(ex.category)}</div>
+        <div class="tag" ${ex.kind === 'stretch' ? 'style="background:#e8f0fb;color:#3b6ea5"' : ''}>${ex.kind === 'stretch' ? '拉伸' : zh(ex.category)}</div>
       </div>`).join('')}
     `;
   },

@@ -158,7 +158,7 @@ const Workout = {
   },
   _filterPick(cat) { document.getElementById('pick-list').innerHTML = this._pickList(cat); },
   _pickList(cat) {
-    return EXERCISES.filter(e => (!cat || e.category === cat) && DB.hasEquipment(e.equipment))
+    return EXERCISES.filter(e => (!cat || e.category === cat) && e.kind !== 'stretch' && DB.hasEquipment(e.equipment))
       .slice(0, 60)
       .map(e => `<div class="ex-row" onclick="Workout.addExercise('${e.id}')">
         <img class="thumb" src="${e.img}" loading="lazy" alt="">

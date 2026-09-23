@@ -70,16 +70,16 @@ const Planner = {
   // 风险/不适动作排除（颈后推举/颈后下拉对肩关节不友好；高翻类爆发力动作技术门槛高，不入自动方案）
   EXCLUDE_RE: /behind (the )?head|behind neck|颈后|clean and press|clean-grip|高翻/,
 
-  // 放松拉伸：部位 → 拉伸动作 id 映射（kind=stretch）
+  // 放松拉伸：部位 → 拉伸动作 id 映射（kind=stretch，均经图文一致性核对）
   COOLDOWN_MAP: {
     'back':       ['1346', '1365'],
-    'chest':      ['1271', '1259'],
+    'chest':      ['1167'],
     'shoulders':  ['0669', '0643'],
     'upper arms': ['0643'],
     'lower arms': ['0721'],
-    'upper legs': ['1713', '1511', '1424'],
+    'upper legs': ['1713', '1576', '1424'],
     'lower legs': ['1377', '1407'],
-    'waist':      ['0690'],
+    'waist':      ['1363'],
     'neck':       ['0716'],
   },
 
