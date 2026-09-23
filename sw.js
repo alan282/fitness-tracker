@@ -1,5 +1,5 @@
 /* 健身助手 Service Worker：应用外壳预缓存，媒体按需缓存，离线可用 */
-const CACHE = 'fitness-app-v1';
+const CACHE = 'fitness-app-v2';
 const SHELL = [
   './', './index.html', './manifest.json',
   './css/style.css',

@@ -12,7 +12,7 @@ const Workout = {
       startTime: new Date().toISOString(),
       warmup: day.warmup || [],
       cooldown: day.cooldown || [],
-      entries: day.exercises.map(item => {
+      entries: day.exercises.filter(item => getEx(item.exId)).map(item => {
         const ex = getEx(item.exId);
         // 优先用方案里手动设定的重量，其次智能建议
         const sug = item.weight != null ? item.weight : Planner.suggestWeight(ex);

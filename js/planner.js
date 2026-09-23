@@ -183,6 +183,7 @@ const Planner = {
 
   // 计算建议重量
   suggestWeight(ex) {
+    if (!ex) return null;
     if (ex.equipment === 'body weight' || ex.category === 'cardio' ||
         /徒手|跳绳|熊爬|爬绳|俯卧撑|引体|臂屈伸|波比|卷腹|平板|举腿|转体|收腿|拉伸/.test(ex.name_zh)) {
       return null;

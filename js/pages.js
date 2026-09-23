@@ -94,7 +94,7 @@ const Pages = {
         return `<div class="ex-row">
           <img class="thumb" src="${ex.img}" loading="lazy" alt="" onclick="UI.showExercise('${ex.id}')">
           <div class="info" onclick="UI.showExercise('${ex.id}')">
-            <div class="nm">${esc(ex.name_zh)}${item.isMain ? '' : ' <span class="tag">辅</span>'}</div>
+            <div class="nm">${esc(ex.name_zh)}${item.isMain === false ? ' <span class="tag">辅</span>' : ''}</div>
             <div class="sub">${zh(ex.equipment)} · ${zh(ex.target)}</div>
           </div>
           <div class="act">
