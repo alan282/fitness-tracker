@@ -291,7 +291,7 @@ const UI = {
         ${fmtDate(h.date)} · ${h.sets.map(s => s.reps > 0 ? `${s.weight || 0}kg×${s.reps}` : '').filter(Boolean).join('，')}</div>`).join('')}` : '';
     openSheet(`
       <h2>${esc(ex.name_zh)}<div style="font-size:12px;font-weight:400;color:var(--text-2)">${esc(ex.name)}</div></h2>
-      <div class="gif-wrap"><img src="${ex.gif}" alt="${esc(ex.name_zh)}"></div>
+      <div class="gif-wrap"><img src="${ex.gif}" alt="${esc(ex.name_zh)}" onerror="if(this.src!=='${ex.img}')this.src='${ex.img}'"></div>
       <div class="meta-chips">
         <span class="meta-chip"><b>${zh(ex.category)}</b></span>
         <span class="meta-chip"><b>${zh(ex.equipment)}</b></span>
