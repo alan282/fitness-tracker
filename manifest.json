@@ -1,0 +1,16 @@
+{
+  "name": "健身助手 · 训练方案与记录",
+  "short_name": "健身助手",
+  "description": "基于器械定制 3/4/5 分化训练方案，逐组记录训练，追踪渐进超载进度",
+  "lang": "zh-CN",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#ff4f00",
+  "background_color": "#f4f4f5",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#ff4f00">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.json">
+  <title>健身助手 · 训练方案与记录</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="app-header">
+    <h1>健身助手</h1>
+    <div class="sub" id="header-sub">器材 · 方案 · 记录 · 进度</div>
+  </header>
+
+  <!-- 页面容器 -->
+  <main>
+    <div class="page" id="page-today"></div>
+    <div class="page" id="page-workout"></div>
+    <div class="page" id="page-plan"></div>
+    <div class="page" id="page-library"></div>
+    <div class="page" id="page-stats"></div>
+    <div class="page" id="page-settings"></div>
+  </main>
+
+  <!-- 底部导航 -->
+  <nav class="tabbar">
+    <button data-page="today" class="active"><span class="ico">◉</span>今日</button>
+    <button data-page="plan"><span class="ico">≡</span>方案</button>
+    <button data-page="library"><span class="ico">▤</span>动作库</button>
+    <button data-page="stats"><span class="ico">◔</span>数据</button>
+    <button data-page="settings"><span class="ico">⚙</span>设置</button>
+  </nav>
+
+  <script src="js/exercises-data.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/planner.js"></script>
+  <script src="js/pages.js"></script>
+  <script src="js/workout.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
