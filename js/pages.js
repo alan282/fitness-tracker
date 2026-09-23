@@ -94,7 +94,7 @@ const Pages = {
         return `<div class="ex-row">
           <img class="thumb" src="${ex.img}" loading="lazy" alt="" onclick="UI.showExercise('${ex.id}')">
           <div class="info" onclick="UI.showExercise('${ex.id}')">
-            <div class="nm">${esc(ex.name_zh)}</div>
+            <div class="nm">${esc(ex.name_zh)}${item.isMain ? '' : ' <span class="tag">辅</span>'}</div>
             <div class="sub">${zh(ex.equipment)} · ${zh(ex.target)}</div>
           </div>
           <div class="act">
@@ -107,9 +107,31 @@ const Pages = {
           </div>
         </div>`;
       }).join('');
+
+      const warmupHtml = (day.warmup || []).length ? `
+        <details style="margin-bottom:8px">
+          <summary style="font-size:12px;font-weight:600;color:var(--ok);padding:6px 2px">热身 ${(day.warmup || []).length} 项（约 10 分钟）</summary>
+          ${(day.warmup || []).map(w => `<div style="padding:5px 10px;border-left:2px solid var(--ok-soft);font-size:12px;color:var(--text-2)">
+            <b style="color:var(--text)">${esc(w.label)}</b>${w.dur ? ' · ' + esc(w.dur) : ''}<br>${esc(w.detail)}</div>`).join('')}
+        </details>` : '';
+
+      const cooldownHtml = (day.cooldown || []).length ? `
+        <details>
+          <summary style="font-size:12px;font-weight:600;color:#3b6ea5;padding:6px 2px">放松拉伸 ${(day.cooldown || []).length} 个（每个 30s × 2 组）</summary>
+          ${(day.cooldown || []).map(c => {
+            const ex = getEx(c.exId); if (!ex) return '';
+            return `<div style="display:flex;align-items:center;gap:10px;padding:5px 10px" onclick="UI.showExercise('${ex.id}')">
+              <img src="${ex.img}" style="width:44px;height:34px;border-radius:6px;object-fit:cover" loading="lazy" alt="">
+              <div style="font-size:13px">${esc(ex.name_zh)} <span style="color:var(--text-3);font-size:11px">${esc(c.dur)}</span></div>
+            </div>`;
+          }).join('')}
+        </details>` : '';
+
       return `<div class="card">
         <h3>${esc(day.name)} <span class="tag">${day.exercises.length} 动作</span></h3>
+        ${warmupHtml}
         ${rows}
+        ${cooldownHtml}
       </div>`;
     }).join('');
 

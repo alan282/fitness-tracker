@@ -1,152 +1,192 @@
-/* ── 方案生成器：3/4/5 分化 + 目标组次 + 器材过滤 ── */
+/* ── 方案生成器：3/4/5 分化 + 黄金动作模式配额 + 主辅组次 + 热身放松 ── */
 
 const Planner = {
-  // 分化定义：每个训练日的部位组成
+  // 分化定义：patterns 为「模式或组」序列（组内任选其一，顺序即训练顺序：先复合后孤立）
   SPLITS: {
     3: {
       name: '3 分法 · 拉推腿',
       days: [
-        { name: '拉日（背）', main: ['back'], assist: ['lower arms', 'waist'] },
-        { name: '推日（胸肩）', main: ['chest', 'shoulders'], assist: ['upper arms'] },
-        { name: '腿日', main: ['upper legs'], assist: ['lower legs', 'waist'] },
+        { name: '拉日（背 + 二头）', patterns: [['pullup', 'pulldown'], ['row'], ['row'], ['pulldown'], ['curl'], ['curl'], ['core']] },
+        { name: '推日（胸肩 + 三头）', patterns: [['bench'], ['inclinepress'], ['pushup'], ['ohp'], ['lateral'], ['triceps']] },
+        { name: '腿日', patterns: [['squat'], ['squat'], ['deadlift'], ['lunge'], ['calf'], ['core']] },
       ],
     },
     4: {
       name: '4 分法 · 胸背肩腿',
       days: [
-        { name: '胸部 + 肱三', main: ['chest'], assist: ['upper arms'] },
-        { name: '背部 + 肱二', main: ['back'], assist: ['lower arms'] },
-        { name: '肩部 + 核心', main: ['shoulders'], assist: ['waist'] },
-        { name: '腿部', main: ['upper legs'], assist: ['lower legs'] },
+        { name: '胸部 + 肱三', patterns: [['bench'], ['inclinepress'], ['pushup'], ['fly'], ['triceps'], ['triceps']] },
+        { name: '背部 + 肱二', patterns: [['pullup', 'pulldown'], ['row'], ['row'], ['pulldown'], ['curl'], ['curl']] },
+        { name: '肩部 + 核心', patterns: [['ohp'], ['ohp'], ['lateral'], ['reardelt'], ['core'], ['core']] },
+        { name: '腿部', patterns: [['squat'], ['squat'], ['deadlift'], ['lunge'], ['calf'], ['core']] },
       ],
     },
     5: {
       name: '5 分法 · 五分化',
       days: [
-        { name: '胸部日', main: ['chest'], assist: [] },
-        { name: '背部日', main: ['back'], assist: [] },
-        { name: '肩部日', main: ['shoulders'], assist: ['neck'] },
-        { name: '手臂日', main: ['upper arms', 'lower arms'], assist: [] },
-        { name: '腿部日', main: ['upper legs'], assist: ['lower legs', 'waist'] },
+        { name: '胸部日', patterns: [['bench'], ['inclinepress'], ['pushup'], ['fly']] },
+        { name: '背部日', patterns: [['pullup', 'pulldown'], ['row'], ['row'], ['pulldown'], ['pulldown']] },
+        { name: '肩部日', patterns: [['ohp'], ['ohp'], ['lateral'], ['lateral'], ['reardelt']] },
+        { name: '手臂日', patterns: [['curl'], ['curl'], ['triceps'], ['triceps'], ['wrist']] },
+        { name: '腿部日', patterns: [['squat'], ['squat'], ['deadlift'], ['lunge'], ['calf'], ['core']] },
       ],
     },
   },
 
-  // 训练目标 → 组次休息
+  // 训练目标 → 主项/辅项 组次休息
   GOALS: {
-    hypertrophy: { label: '增肌塑形', sets: 4, reps: '8-12', rest: 90, mainCount: 4, assistCount: 2 },
-    strength:    { label: '绝对力量', sets: 5, reps: '3-6',  rest: 180, mainCount: 3, assistCount: 2 },
-    endurance:   { label: '肌耐力减脂', sets: 3, reps: '15-20', rest: 45, mainCount: 4, assistCount: 3 },
+    hypertrophy: { label: '增肌塑形', main: { sets: 4, reps: '6-10', rest: 120 }, assist: { sets: 3, reps: '12-15', rest: 60 } },
+    strength:    { label: '绝对力量', main: { sets: 5, reps: '3-6',  rest: 180 }, assist: { sets: 3, reps: '8-12',  rest: 90 } },
+    endurance:   { label: '肌耐力减脂', main: { sets: 3, reps: '12-15', rest: 60 }, assist: { sets: 3, reps: '15-20', rest: 45 } },
   },
 
-  // 器械优先级（同为可选时，优先安排自由重量）
+  // 动作模式（中英文正则，kind=exercise）
+  PATTERNS: {
+    pullup:      /pull-?up|pullup|chin|引体/i,
+    pulldown:    /pulldown|下拉/i,
+    row:         /row|划船/i,
+    bench:       /bench press|卧推/i,
+    inclinepress: /incline (?:hammer |one arm |close grip |wide grip )?press|incline bench|上斜(?!划船|弯举)/i,
+    pushup:      /push.?up|俯卧撑|dip|臂屈伸/i,
+    ohp:         /(overhead|military|shoulder) press|推举(?!卷腹)|侧推/i,
+    lateral:     /lateral raise|side lateral|侧平举/i,
+    squat:       /squat|深蹲/i,
+    deadlift:    /deadlift|硬拉/i,
+    lunge:       /lunge|箭步/i,
+    curl:        /curl|弯举/i,
+    triceps:     /pushdown|下压|triceps|肱三/i,
+    calf:        /calf|提踵/i,
+    core:        /crunch|卷腹|plank|平板|leg raise|举腿|sit-?up|twist|转体|收腿/i,
+    fly:         /fly|crossover|夹胸|飞鸟/i,
+    reardelt:    /rear delt|后束/i,
+    wrist:       /wrist|腕/i,
+  },
+
+  // 复合主项模式（决定组次档位与排序权重）
+  MAIN_PATTERNS: ['pullup', 'pulldown', 'row', 'bench', 'inclinepress', 'pushup', 'ohp', 'squat', 'deadlift', 'lunge'],
+
+  // 器械优先级（自由重量优先）
   EQUIP_PRIORITY: ['barbell', 'dumbbell', 'kettlebell', 'cable', 'smith machine', 'leverage machine', 'body weight', 'trap bar', 'olympic barbell', 'ez barbell', 'band', 'medicine ball', 'stability ball', 'rope', 'sled machine', 'weighted'],
 
-  // 复合动作关键词
-  COMPOUND_RE: /(press|squat|deadlift|row|pull|push|lunge|dip|chin|thrust|hinge|swing|carry|crawl|jump|clean|高翻|硬拉|深蹲|卧推|划船|推举|箭步|引体|臂屈伸)/i,
-  ISOLATION_RE: /(curl|raise|extension|kickback|crunch|fly|crossover|shrug|rotation|弯举|侧平举|卷腹|飞鸟|转体)/i,
+  // 风险/不适动作排除（颈后推举/颈后下拉对肩关节不友好；高翻类爆发力动作技术门槛高，不入自动方案）
+  EXCLUDE_RE: /behind (the )?head|behind neck|颈后|clean and press|clean-grip|高翻/,
 
-  // 首练重量系数（相对体重）
-  STRENGTH_RATIO: [
-    { re: /deadlift|硬拉/, ratio: 0.75 },
-    { re: /squat(?!.*jump)|深蹲(?!跳)/, ratio: 0.55 },
-    { re: /bench press|卧推/, ratio: 0.45 },
-    { re: /row|划船/, ratio: 0.40 },
-    { re: /press|推举/, ratio: 0.30 },
-    { re: /lunge|箭步/, ratio: 0.25 },
-    { re: /curl|弯举/, ratio: 0.15 },
-    { re: /raise|平举/, ratio: 0.10 },
-    { re: /pushdown|pulldown|下压|下拉/, ratio: 0.25 },
-  ],
+  // 放松拉伸：部位 → 拉伸动作 id 映射（kind=stretch）
+  COOLDOWN_MAP: {
+    'back':       ['1346', '1365'],
+    'chest':      ['1271', '1259'],
+    'shoulders':  ['0669', '0643'],
+    'upper arms': ['0643'],
+    'lower arms': ['0721'],
+    'upper legs': ['1713', '1511', '1424'],
+    'lower legs': ['1377', '1407'],
+    'waist':      ['0690'],
+    'neck':       ['0716'],
+  },
 
   _score(ex) {
     let s = 0;
-    if (this.COMPOUND_RE.test(ex.name) || this.COMPOUND_RE.test(ex.name_zh)) s += 3;
-    if (this.ISOLATION_RE.test(ex.name) || this.ISOLATION_RE.test(ex.name_zh)) s -= 1;
     const pri = this.EQUIP_PRIORITY.indexOf(ex.equipment);
     s += pri >= 0 ? (14 - pri) * 0.3 : 0;
     return s;
   },
 
-  // 提取核心动作词（用于多样性控制：一个训练日里"卧推"类最多出现 2 次）
-  _coreWord(ex) {
-    const n = (ex.name_zh || '') + ' ' + ex.name;
-    const words = ['卧推', '深蹲', '硬拉', '划船', '推举', '弯举', '下拉', '下压', '俯卧撑', '引体',
-      '箭步', '臂屈伸', '平举', '飞鸟', '卷腹', '提踵', '高翻', '跳', 'squat', 'press', 'row',
-      'deadlift', 'curl', 'pulldown', 'pushdown', 'push-up', 'pull-up', 'dip', 'lunge', 'raise'];
-    for (const w of words) if (n.toLowerCase().includes(w.toLowerCase())) return w;
-    return ex.id;
-  },
-
-  // 从动作池选出 n 个：部位均衡 + 器材可用 + 复合优先 + 核心词限额 + 器械多样
-  _pick(cats, n, excludeIds) {
-    this._dayCore = this._dayCore || new Map();      // 当日核心词计数
-    this._dayEquip = this._dayEquip || new Map();     // 当日器械计数
-    const perCat = Math.max(1, Math.round(n / cats.length));
-    const picked = [];
-    const take = (pool, limit) => {
-      pool = pool.filter(e => !/拉伸|stretch/i.test(e.name_zh + e.name));
-      pool.sort((a, b) => this._score(b) - this._score(a));
-      let cnt = 0;
-      for (const ex of pool) {
-        if (cnt >= limit || picked.length >= n) return;
-        const cw = this._coreWord(ex);
-        if ((this._dayCore.get(cw) || 0) >= 2) continue;         // 同模式动作每天最多 2 个
-        if ((this._dayEquip.get(ex.equipment) || 0) >= 2) continue; // 同器械每天最多 2 个
-        this._dayCore.set(cw, (this._dayCore.get(cw) || 0) + 1);
-        this._dayEquip.set(ex.equipment, (this._dayEquip.get(ex.equipment) || 0) + 1);
-        excludeIds.add(ex.id);
-        picked.push(ex);
-        cnt++;
-      }
-    };
-    // 各部位均衡选取
-    for (const cat of cats) {
-      take(EXERCISES.filter(e => e.category === cat && e.category !== 'cardio' &&
-        DB.hasEquipment(e.equipment) && !excludeIds.has(e.id)), perCat);
+  // 按「模式或组」选动作：组内任一模式匹配、器材可用、未用过；组内首个模式优先（如 ['pullup','pulldown'] 引体优先于下拉）
+  _pickPattern(groupKeys, usedIds, dayEquipCount) {
+    let best = null, bestScore = -1;
+    for (const ex of EXERCISES) {
+      if (ex.kind !== 'exercise' || usedIds.has(ex.id)) continue;
+      if (!DB.hasEquipment(ex.equipment)) continue;
+      if (this.EXCLUDE_RE.test(ex.name + ex.name_zh)) continue;
+      // 肩推不匹配下斜（下斜推是胸动作）
+      if (groupKeys.includes('ohp') && /decline|下斜/.test(ex.name + ex.name_zh)) continue;
+      // 同天同器械最多 2 个，保证多样性
+      if (dayEquipCount && (dayEquipCount.get(ex.equipment) || 0) >= 2) continue;
+      const hitIdx = groupKeys.findIndex(k => this.PATTERNS[k] && this.PATTERNS[k].test(ex.name + ' ' + ex.name_zh));
+      if (hitIdx < 0) continue;
+      const sc = this._score(ex) + (groupKeys.length > 1 ? (groupKeys.length - hitIdx) * 2 : 0);
+      if (sc > bestScore) { best = ex; bestScore = sc; }
     }
-    // 名额未满则放宽核心词限额补足
-    if (picked.length < n) {
-      take(EXERCISES.filter(e => cats.includes(e.category) && e.category !== 'cardio' &&
-        DB.hasEquipment(e.equipment) && !excludeIds.has(e.id)), n - picked.length);
-    }
-    return picked;
+    return best;
   },
 
   // 生成完整方案
   generate(split, goal) {
     const def = this.SPLITS[split];
     const g = this.GOALS[goal];
-    const excludeIds = new Set(); // 跨天不重复
+    const usedIds = new Set(); // 跨天不重复
+
     const plan = {
       split, goal, name: def.name,
       createdAt: new Date().toISOString(),
       days: def.days.map(d => {
-        this._dayCore = new Map();
-        this._dayEquip = new Map();
-        const mainEx = this._pick(d.main, g.mainCount, excludeIds);
-        const assistEx = d.assist.length ? this._pick(d.assist, g.assistCount, excludeIds) : [];
-        const exercises = [...mainEx, ...assistEx].map(e => ({
-          exId: e.id,
-          sets: g.sets,
-          reps: g.reps,
-          rest: g.rest,
-        }));
-        return { name: d.name, exercises };
+        const exercises = [];
+        const dayEquipCount = new Map(); // 当日器械多样性约束
+        d.patterns.forEach(group => {
+          const ex = this._pickPattern(group, usedIds, dayEquipCount);
+          if (!ex) return; // 器材不支持该模式则跳过，宁缺勿滥
+          usedIds.add(ex.id);
+          dayEquipCount.set(ex.equipment, (dayEquipCount.get(ex.equipment) || 0) + 1);
+          const isMain = group.some(k => this.MAIN_PATTERNS.includes(k));
+          const cfg = isMain ? g.main : g.assist;
+          exercises.push({ exId: ex.id, sets: cfg.sets, reps: cfg.reps, rest: cfg.rest, isMain });
+        });
+
+        // 放松拉伸（按当日主模式映射部位）
+        const cooldown = this._buildCooldown(d.patterns);
+
+        return {
+          name: d.name,
+          warmup: this._buildWarmup(exercises),
+          exercises,
+          cooldown,
+        };
       }),
     };
-    this._dayCore = null; this._dayEquip = null;
     return plan;
+  },
+
+  // 热身节（通用结构化指引）
+  _buildWarmup(exercises) {
+    const first = exercises.length ? getEx(exercises[0].exId) : null;
+    return [
+      { label: '低强度有氧', detail: '跑步机快走 / 单车 / 开合跳，逐渐提高心率至微喘', dur: '5 分钟' },
+      { label: '动态活动', detail: '手臂环绕、髋部画圈、徒手深蹲各 10 次，活动开今日要用的关节', dur: '2 分钟' },
+      first
+        ? { label: '主项热身组', detail: '第一个动作「' + first.name_zh + '」用 40-50% 重量做 2 组 × 12 次，找发力感', dur: '3 分钟' }
+        : { label: '主项热身组', detail: '今日首个动作用 40-50% 重量做 2 组 × 12 次', dur: '3 分钟' },
+    ];
+  },
+
+  // 放松节：当日模式涉及部位 → 静态拉伸动作
+  _buildCooldown(patterns) {
+    const partByPattern = {
+      pullup: 'back', pulldown: 'back', row: 'back',
+      bench: 'chest', inclinepress: 'chest', pushup: 'chest', fly: 'chest',
+      ohp: 'shoulders', lateral: 'shoulders', reardelt: 'shoulders',
+      curl: 'upper arms', triceps: 'upper arms', wrist: 'lower arms',
+      squat: 'upper legs', deadlift: 'upper legs', lunge: 'upper legs', calf: 'lower legs',
+      core: 'waist',
+    };
+    const parts = [];
+    patterns.flat().forEach(k => {
+      const p = partByPattern[k];
+      if (p && !parts.includes(p)) parts.push(p);
+    });
+    const ids = [];
+    parts.forEach(p => (this.COOLDOWN_MAP[p] || []).forEach(id => {
+      if (!ids.includes(id)) ids.push(id);
+    }));
+    return ids.slice(0, 3).map(id => ({
+      exId: id, dur: '30s × 2 组',
+    }));
   },
 
   // 计算建议重量
   suggestWeight(ex) {
-    // 自重/有氧类不给重量建议
     if (ex.equipment === 'body weight' || ex.category === 'cardio' ||
-        /徒手|跳绳|熊爬|爬绳|俯卧撑|引体|臂屈伸|波比/.test(ex.name_zh)) {
+        /徒手|跳绳|熊爬|爬绳|俯卧撑|引体|臂屈伸|波比|卷腹|平板|举腿|转体|收腿|拉伸/.test(ex.name_zh)) {
       return null;
     }
-    // 有历史：渐进超载
     const hist = DB.historyOf(ex.id);
     if (hist.length) {
       const last = hist[hist.length - 1];
@@ -155,34 +195,47 @@ const Planner = {
         const topW = Math.max(...lastSets.map(s => s.weight));
         const avgReps = lastSets.reduce((a, s) => a + s.reps, 0) / lastSets.length;
         const goal = DB.getProfile().goal;
-        const repTarget = goal === 'strength' ? 5 : goal === 'endurance' ? 18 : 10;
+        const repTarget = goal === 'strength' ? 5 : goal === 'endurance' ? 18 : 8;
         if (avgReps >= repTarget) {
-          // 全部达标 → 加重（上肢 2.5kg，下肢 5kg）
           const isLower = ['upper legs', 'lower legs', 'waist'].includes(ex.category);
           return Math.round((topW + (isLower ? 5 : 2.5)) * 2) / 2;
         }
-        return topW; // 未达标保持
+        return topW;
       }
     }
-    // 无历史：体重系数估算
     const bw = DB.getProfile().bodyweight || 65;
     const name = ex.name + ' ' + (ex.name_zh || '');
-    for (const r of this.STRENGTH_RATIO) {
-      if (r.re.test(name)) return Math.max(2.5, Math.round(bw * r.ratio / 2.5) * 2.5);
+    const ratios = [
+      [/deadlift|硬拉/, 0.75],
+      [/squat(?!.*jump)|深蹲(?!跳)/, 0.55],
+      [/bench press|卧推/, 0.45],
+      [/row|划船/, 0.40],
+      [/press|推举/, 0.30],
+      [/lunge|箭步/, 0.25],
+      [/pushdown|pulldown|下压|下拉/, 0.25],
+      [/curl|弯举/, 0.15],
+      [/raise|平举|侧推/, 0.10],
+      [/calf|提踵/, 0.20],
+    ];
+    for (const r of ratios) {
+      if (r[0].test(name)) return Math.max(2.5, Math.round(bw * r[1] / 2.5) * 2.5);
     }
     return null;
   },
 
-  // 替换动作：同部位同器械优先，其次同部位任意
+  // 替换动作：同模式优先，其次同部位
   alternatives(exId) {
     const cur = getEx(exId);
+    const curPattern = Object.keys(this.PATTERNS).find(k => this.PATTERNS[k].test(cur.name + ' ' + cur.name_zh));
     return EXERCISES.filter(e =>
       e.id !== exId &&
+      e.kind !== 'stretch' &&
       e.category === cur.category &&
-      DB.hasEquipment(e.equipment)
+      DB.hasEquipment(e.equipment) &&
+      !this.EXCLUDE_RE.test(e.name + e.name_zh)
     ).sort((a, b) => {
-      const sa = (a.equipment === cur.equipment ? 2 : 0) + this._score(a);
-      const sb = (b.equipment === cur.equipment ? 2 : 0) + this._score(b);
+      const sa = (curPattern && this.PATTERNS[curPattern].test(a.name + ' ' + a.name_zh) ? 3 : 0) + this._score(a);
+      const sb = (curPattern && this.PATTERNS[curPattern].test(b.name + ' ' + b.name_zh) ? 3 : 0) + this._score(b);
       return sb - sa;
     }).slice(0, 12);
   },

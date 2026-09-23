@@ -10,6 +10,8 @@ const Workout = {
     this.session = {
       dayIdx, dayName: day.name,
       startTime: new Date().toISOString(),
+      warmup: day.warmup || [],
+      cooldown: day.cooldown || [],
       entries: day.exercises.map(item => {
         const ex = getEx(item.exId);
         // 优先用方案里手动设定的重量，其次智能建议
@@ -55,6 +57,13 @@ const Workout = {
     const totalDone = s.entries.reduce((a, e) => a + e.sets.filter(x => x.done).length, 0);
     const totalSets = s.entries.reduce((a, e) => a + e.sets.length, 0);
 
+    const warmupHtml = (s.warmup || []).length ? `
+      <details class="card" style="padding:10px 14px;margin-bottom:12px">
+        <summary style="font-size:13px;font-weight:600;color:var(--ok)">训练前热身 · ${(s.warmup || []).length} 项</summary>
+        ${(s.warmup || []).map(w => `<div style="padding:6px 10px;border-left:2px solid var(--ok-soft);font-size:12px;color:var(--text-2);margin-top:6px">
+          <b style="color:var(--text)">${esc(w.label)}</b>${w.dur ? ' · ' + esc(w.dur) : ''}<br>${esc(w.detail)}</div>`).join('')}
+      </details>` : '';
+
     el.innerHTML = `
       <div class="card" style="display:flex;justify-content:space-between;align-items:center;position:sticky;top:64px;z-index:20">
         <div>
@@ -66,6 +75,7 @@ const Workout = {
           ${s.entries.length ? `<button class="btn small primary" onclick="Workout.finish()">完成训练</button>` : ''}
         </div>
       </div>
+      ${warmupHtml}
       ${s.entries.map((entry, ei) => this._exBlock(entry, ei)).join('')}
     `;
   },
@@ -200,9 +210,30 @@ const Workout = {
       entries: valid.map(e => ({ exId: e.exId, sets: e.sets.map(x => ({ weight: x.weight || 0, reps: x.reps || 0, done: x.done })) })),
     });
     DB.advanceDay();
+    const cooldown = s.cooldown || [];
     this.session = null;
     toast('训练已记录');
     App.go('today');
+    // 结束后展示放松拉伸清单
+    if (cooldown.length) {
+      setTimeout(() => {
+        openSheet(`
+          <h2>训练结束 · 放松拉伸</h2>
+          <div style="font-size:12px;color:var(--text-2);margin-bottom:12px">每个动作保持 30 秒 × 2 组，帮助恢复、减少次日酸痛</div>
+          ${cooldown.map(c => {
+            const ex = getEx(c.exId); if (!ex) return '';
+            return `<div class="ex-row">
+              <img class="thumb" src="${ex.gif}" alt="" style="object-fit:contain;background:#18181b">
+              <div class="info" onclick="closeSheet();UI.showExercise('${ex.id}')">
+                <div class="nm">${esc(ex.name_zh)}</div>
+                <div class="sub">${esc(c.dur)} · 点击看动作演示</div>
+              </div>
+            </div>`;
+          }).join('')}
+          <button class="btn block ghost" style="margin-top:10px" onclick="closeSheet()">完成，收工</button>
+        `);
+      }, 300);
+    }
   },
 
   abandon() {
