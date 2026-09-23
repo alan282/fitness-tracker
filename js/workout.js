@@ -12,7 +12,8 @@ const Workout = {
       startTime: new Date().toISOString(),
       entries: day.exercises.map(item => {
         const ex = getEx(item.exId);
-        const sug = Planner.suggestWeight(ex);
+        // 优先用方案里手动设定的重量，其次智能建议
+        const sug = item.weight != null ? item.weight : Planner.suggestWeight(ex);
         return {
           exId: item.exId,
           planSets: item.sets, planReps: item.reps, planRest: item.rest,

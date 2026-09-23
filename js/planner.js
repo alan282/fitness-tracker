@@ -4,10 +4,10 @@ const Planner = {
   // 分化定义：每个训练日的部位组成
   SPLITS: {
     3: {
-      name: '3 分法 · 推拉腿',
+      name: '3 分法 · 拉推腿',
       days: [
-        { name: '推日', main: ['chest', 'shoulders'], assist: ['upper arms'] },
-        { name: '拉日', main: ['back'], assist: ['lower arms', 'waist'] },
+        { name: '拉日（背）', main: ['back'], assist: ['lower arms', 'waist'] },
+        { name: '推日（胸肩）', main: ['chest', 'shoulders'], assist: ['upper arms'] },
         { name: '腿日', main: ['upper legs'], assist: ['lower legs', 'waist'] },
       ],
     },

@@ -89,6 +89,8 @@ const Pages = {
     const daysHtml = plan.days.map((day, i) => {
       const rows = day.exercises.map((item, j) => {
         const ex = getEx(item.exId); if (!ex) return '';
+        const sug = Planner.suggestWeight(ex);
+        const curW = item.weight != null ? item.weight : sug;
         return `<div class="ex-row">
           <img class="thumb" src="${ex.img}" loading="lazy" alt="" onclick="UI.showExercise('${ex.id}')">
           <div class="info" onclick="UI.showExercise('${ex.id}')">
@@ -96,6 +98,10 @@ const Pages = {
             <div class="sub">${zh(ex.equipment)} · ${zh(ex.target)}</div>
           </div>
           <div class="act">
+            <label class="w-edit" style="display:flex;align-items:center;gap:3px">
+              <input type="number" inputmode="decimal" step="2.5" min="0" value="${curW != null ? curW : ''}" placeholder="—" style="width:52px;padding:5px 4px;text-align:center;border:1px solid var(--border);border-radius:6px;font-size:13px;outline:none" onchange="UI._setPlanWeight(${i},${j},this.value)">
+              <span style="font-size:11px;color:var(--text-3)">kg</span>
+            </label>
             <div class="sets-info"><b>${item.sets}</b>×<b>${item.reps}</b><br><span style="font-size:11px">${item.rest}s</span></div>
             <button class="btn small ghost" onclick="UI.swapExercise(${i},${j})">换</button>
           </div>
@@ -111,7 +117,7 @@ const Pages = {
       <div class="card" style="display:flex;justify-content:space-between;align-items:center">
         <div>
           <div style="font-weight:700">${esc(plan.name)}</div>
-          <div class="sub" style="font-size:12px;color:var(--text-2)">${Planner.GOALS[plan.goal].label} · ${plan.days.length} 天/轮</div>
+          <div class="sub" style="font-size:12px;color:var(--text-2)">${Planner.GOALS[plan.goal].label} · ${plan.days.length} 天/轮 · 每动作可设定默认重量（kg），训练时自动带出</div>
         </div>
         <button class="btn small" onclick="UI.regenPlan()">重新生成</button>
       </div>
@@ -316,6 +322,13 @@ const UI = {
         <div class="info"><div class="nm">${esc(a.name_zh)}</div><div class="sub">${zh(a.equipment)} · ${zh(a.target)}</div></div>
       </div>`).join('')}
     `);
+  },
+  _setPlanWeight(dayIdx, itemIdx, val) {
+    const plan = DB.getPlan();
+    const item = plan.days[dayIdx].exercises[itemIdx];
+    const v = parseFloat(val);
+    item.weight = isNaN(v) ? null : v;
+    DB.setPlan(plan);
   },
   _doSwap(dayIdx, itemIdx, newId) {
     const plan = DB.getPlan();
