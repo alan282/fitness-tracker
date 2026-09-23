@@ -13,7 +13,7 @@ const DB = {
 
   get(key, def) {
     try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; }
-    catch { return def; }
+    catch (e) { return def; }
   },
   set(key, val) { localStorage.setItem(key, JSON.stringify(val)); },
 
@@ -49,9 +49,10 @@ const DB = {
   // 某动作的全部历史（按时间正序）
   historyOf(exId) {
     return this.getWorkouts()
-      .flatMap(w => (w.entries || []).filter(e => e.exId === exId).map(e => ({
+      .map(w => (w.entries || []).filter(e => e.exId === exId).map(e => ({
         date: w.date, sets: e.sets.filter(s => s.reps > 0),
       })))
+      .reduce((a, part) => a.concat(part), [])
       .filter(h => h.sets.length > 0);
   },
   // 某动作最近一次有效组重量
@@ -126,7 +127,7 @@ function fmtDateFull(d) {
   const dt = typeof d === 'string' ? new Date(d) : d;
   return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
 }
-function esc(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 function toast(msg) {
   let t = document.querySelector('.toast');
   if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); }

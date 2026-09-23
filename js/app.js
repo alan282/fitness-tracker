@@ -42,7 +42,6 @@ const App = {
 
   wizard() {
     const el = document.getElementById('page-today');
-    document.querySelectorAll('.tabbar button').forEach(b => b.disabled = true);
     this._wizardSplit(el);
   },
 
@@ -100,12 +99,13 @@ const App = {
   _wizardFinish() {
     const checked = [...document.querySelectorAll('#wiz-equip-list input:checked')].map(i => i.dataset.equip);
     const hasAll = checked.length === 0;
-    DB.setEquipment({ hasAll, items: Object.fromEntries(checked.map(e => [e, {}])) });
+    const items = {};
+    checked.forEach(e => { items[e] = {}; });
+    DB.setEquipment({ hasAll, items });
     const { split, goal } = this.wizardData;
     DB.setPlan(Planner.generate(split, goal));
     DB.setPlanState({ dayCursor: 0 });
     DB.finishSetup();
-    document.querySelectorAll('.tabbar button').forEach(b => b.disabled = false);
     toast('方案已生成');
     this.go('today');
   },
@@ -225,7 +225,7 @@ const App = {
         DB.importAll(reader.result);
         toast('导入成功');
         this.go('today');
-      } catch { toast('导入失败：文件格式错误'); }
+      } catch (err) { toast('导入失败：文件格式错误'); }
     };
     reader.readAsText(file);
   },

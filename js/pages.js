@@ -179,7 +179,11 @@ const Pages = {
     });
 
     // 有记录的动作
-    const trainedIds = [...new Set(workouts.flatMap(w => (w.entries || []).map(e => e.exId)))].filter(id => getEx(id));
+    const idSets = workouts.map(w => (w.entries || []).map(e => e.exId));
+    const seen = {};
+    const trainedIds = [];
+    idSets.forEach(ids => ids.forEach(id => { if (!seen[id]) { seen[id] = true; trainedIds.push(id); } }));
+    const trainedIdsFiltered = trainedIds.filter(id => getEx(id));
 
     el.innerHTML = `
       ${workouts.length === 0 ? '<div class="empty"><div class="big">无数据</div><p>完成第一次训练后，这里会出现你的数据</p></div>' : ''}
@@ -191,9 +195,9 @@ const Pages = {
       <div class="chart-box">
         <h3>动作重量曲线</h3>
         <div class="hint-s">渐进超载追踪</div>
-        ${trainedIds.length ? `
+        ${trainedIdsFiltered.length ? `
         <select onchange="Pages._weightChart(this.value)">
-          ${trainedIds.map(id => `<option value="${id}">${esc(getEx(id).name_zh)}</option>`).join('')}
+          ${trainedIdsFiltered.map(id => `<option value="${id}">${esc(getEx(id).name_zh)}</option>`).join('')}
         </select>
         <div id="weight-chart"></div>` : '<div class="hint-s">暂无记录</div>'}
       </div>
@@ -212,7 +216,7 @@ const Pages = {
         <span style="font-size:12px;color:var(--text-2)"> ${fmtDate(w.date)} · ${(w.entries || []).reduce((b, e) => b + e.sets.reduce((c, s) => c + (s.weight || 0) * (s.reps || 0), 0), 0)} kg · ${(w.entries || []).reduce((b, e) => b + e.sets.filter(s => s.reps > 0).length, 0)} 组</span>
       </div>`).join('')}
     `;
-    if (trainedIds.length) this._weightChart(trainedIds[0]);
+    if (trainedIdsFiltered.length) this._weightChart(trainedIdsFiltered[0]);
   },
 
   _barChart(data) {
