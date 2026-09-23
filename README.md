@@ -20,3 +20,8 @@
 ## 技术栈
 
 纯原生 HTML / CSS / JavaScript，无框架无依赖。数据源为 exercises-dataset 精选子集（300 动作含中文翻译，图片视频约 30MB）。
+
+## 版权声明
+
+- 代码：MIT License
+- 动作图片与 GIF：© Gym visual — https://gymvisual.com/（经 [exercises-dataset](https://github.com/hasaneyldrm/exercises-dataset) 授权再分发，180×180 分辨率）

@@ -162,7 +162,7 @@ const App = {
           <button class="btn small ghost" style="color:#b91c1c" onclick="App._resetAll()">清空全部数据</button>
         </div>
       </div>
-      <div style="text-align:center;font-size:11px;color:var(--text-3);padding:8px 0 20px">健身助手 · 本地数据版 · ${EXERCISES.length} 动作库</div>
+      <div style="text-align:center;font-size:11px;color:var(--text-3);padding:8px 0 20px">健身助手 · 本地数据版 · ${EXERCISES.length} 动作库<br>动作图片与演示 © Gym visual</div>
     `;
   },
 
