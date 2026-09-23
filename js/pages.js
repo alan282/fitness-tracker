@@ -320,6 +320,11 @@ const UI = {
     openSheet(`
       <h2>${esc(ex.name_zh)}<div style="font-size:12px;font-weight:400;color:var(--text-2)">${esc(ex.name)}</div></h2>
       <div class="gif-wrap"><img src="${ex.gif}" alt="${esc(ex.name_zh)}" onerror="if(this.src!=='${ex.img}')this.src='${ex.img}'"></div>
+      ${ex.poses ? `
+      <div class="instr-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--text-2)" onclick="const p=document.getElementById('poses-img');p.style.display=p.style.display==='none'?'':'none'">
+        起止姿势对照 <span style="font-size:11px;color:var(--text-3)">（点击收起）</span>
+      </div>
+      <img id="poses-img" src="${ex.poses}" alt="起止姿势" style="max-height:420px;width:auto;margin:0 auto 12px;border-radius:10px;background:var(--elevated);padding:6px">` : ''}
       <div class="meta-chips">
         <span class="meta-chip"><b>${zh(ex.category)}</b></span>
         <span class="meta-chip"><b>${zh(ex.equipment)}</b></span>
