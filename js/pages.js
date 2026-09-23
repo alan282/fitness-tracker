@@ -14,7 +14,7 @@ const Pages = {
         plan: () => this.plan(el),
         library: () => this.library(el),
         stats: () => this.stats(el),
-        settings: () => this.settings(el),
+        settings: () => App.settings(el),
         workout: () => { if (Workout.session) Workout.render(el); else return this.today(el); },
       };
       (map[page] || (() => {}))();

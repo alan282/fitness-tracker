@@ -153,6 +153,15 @@ const App = {
       </div>
 
       <div class="card">
+        <h3>添加到手机桌面</h3>
+        <div id="install-hint" style="font-size:12px;color:var(--text-2);margin-bottom:10px">
+          安装后像原生 APP 一样全屏运行，看过的动作图和演示自动缓存，离线可用。
+        </div>
+        <button class="btn small primary" id="install-btn" onclick="App._install()" style="display:none">一键安装到桌面</button>
+        <div id="install-guide" style="display:none"></div>
+      </div>
+
+      <div class="card">
         <h3>数据备份</h3>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn small" onclick="App._exportData()">导出备份</button>
@@ -164,6 +173,65 @@ const App = {
       </div>
       <div style="text-align:center;font-size:11px;color:var(--text-3);padding:8px 0 20px">健身助手 · 本地数据版 · ${EXERCISES.length} 动作库<br>动作图片与演示 © Gym visual</div>
     `;
+    setTimeout(() => this._refreshInstallUI(), 0);
+  },
+
+  /* ── 添加到主屏幕 ── */
+  _deferredPrompt: null,
+  _installBound: false,
+
+  _bindInstall() {
+    if (this._installBound) return;
+    this._installBound = true;
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      this._deferredPrompt = e;
+      // 设置页已打开时实时刷新按钮
+      const btn = document.getElementById('install-btn');
+      if (btn) { btn.style.display = ''; const h = document.getElementById('install-hint'); if (h) h.style.display = 'none'; }
+    });
+    window.addEventListener('appinstalled', () => {
+      this._deferredPrompt = null;
+      toast('已安装到桌面');
+      this.settings(document.getElementById('page-settings'));
+    });
+  },
+
+  _install() {
+    const p = this._deferredPrompt;
+    if (p) {
+      p.prompt();
+      p.userChoice.then(() => { this._deferredPrompt = null; });
+    } else {
+      toast('当前浏览器不支持一键安装，请按下方指引手动添加');
+    }
+  },
+
+  // 设置页渲染时刷新安装区状态
+  _refreshInstallUI() {
+    this._bindInstall();
+    const btn = document.getElementById('install-btn');
+    const guide = document.getElementById('install-guide');
+    const hint = document.getElementById('install-hint');
+    if (!btn || !guide) return;
+    if (this._deferredPrompt) {
+      btn.style.display = '';
+      if (hint) hint.style.display = 'none';
+      guide.style.display = 'none';
+      return;
+    }
+    // 无安装提示：判断平台给手动教程
+    const ua = navigator.userAgent;
+    const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isWeChat = /MicroMessenger/i.test(ua);
+    const guideHtml = isWeChat
+      ? '微信内无法直接安装：<div style="margin-top:6px">1. 点右上角「···」<br>2. 选择「在浏览器打开」（用 Safari 或 Chrome）<br>3. 在浏览器里按下面步骤添加</div>'
+      : isIOS
+        ? 'iOS Safari 手动添加：<div style="margin-top:6px">1. 点浏览器底部「分享」按钮（方框带向上箭头）<br>2. 滚动找到「添加到主屏幕」<br>3. 点「添加」完成</div>'
+        : 'Android 浏览器手动添加：<div style="margin-top:6px">Chrome：菜单（右上角 ⋮）→「添加到主屏幕 / 安装应用」<br>其他浏览器：菜单 →「添加到桌面」</div>';
+    guide.innerHTML = '<div style="font-size:12px;color:var(--text-2);line-height:1.8">' + guideHtml + '</div>';
+    guide.style.display = '';
+    if (hint) hint.style.display = '';
   },
 
   _saveProfile() {
