@@ -32,6 +32,24 @@ const Pages = {
     const day = plan.days[dayIdx];
     const workouts = DB.getWorkouts();
 
+    // 数据易失环境提示（微信内浏览器的本地存储不持久，杀掉微信数据即丢失）
+    let storageHint = '';
+    if (!localStorage.getItem('gym_storage_hint_ok')) {
+      const ua = navigator.userAgent;
+      const inWeChat = /MicroMessenger/i.test(ua);
+      const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      if (inWeChat || isIOS) {
+        storageHint = `<div class="card" style="display:flex;gap:10px;align-items:flex-start;padding:10px 14px;margin-bottom:12px;border-left:3px solid #c77700">
+          <div style="font-size:12px;color:var(--text-2);line-height:1.7;flex:1">
+            <b>数据保存提醒</b><br>${inWeChat
+              ? '微信内打开的网页数据<b>不会保留</b>（关闭微信即丢失）。请点右上角「···」→「在浏览器打开」，或安装到手机桌面使用，数据才能持久保存。'
+              : '建议「添加到主屏幕」以 APP 方式使用——独立存储更稳定，不怕浏览器清理标签页数据。'}<br>已有数据可在「设置 → 导出备份」随时备份。
+          </div>
+          <button class="btn small ghost" style="flex-shrink:0" onclick="localStorage.setItem('gym_storage_hint_ok','1');Pages.render('today')">知道了</button>
+        </div>`;
+      }
+    }
+
     // 统计
     const totalVol = workouts.reduce((a, w) => a + (w.entries || []).reduce((b, e) => b + e.sets.reduce((c, s) => c + (s.weight || 0) * (s.reps || 0), 0), 0), 0);
     // 连续训练周
@@ -63,12 +81,16 @@ const Pages = {
     const active = Workout.session;
     const activeSameDay = active && active.dayIdx === dayIdx;
     const startBtn = active
-      ? `<button class="btn" style="background:var(--ok,#22a06b)" onclick="App.go('workout')">继续训练（进行中）</button>`
+      ? `<button class="btn" onclick="App.go('workout')">继续训练</button>`
       : `<button class="btn" onclick="Workout.start(${dayIdx})">开始训练</button>`;
+    const activeBadge = active
+      ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:#16a34a;background:#dcfce7;border-radius:999px;padding:2px 8px;margin-left:6px;vertical-align:1px"><span style="width:6px;height:6px;border-radius:50%;background:#16a34a;display:inline-block"></span>进行中</span>`
+      : '';
 
     el.innerHTML = `
+      ${storageHint}
       <div class="today-hero">
-        <div class="label">今日训练 · 第 ${dayIdx + 1}/${plan.days.length} 天</div>
+        <div class="label">今日训练 · 第 ${dayIdx + 1}/${plan.days.length} 天${activeBadge}</div>
         <div class="day-name">${esc(day.name)}</div>
         <div class="meta">${esc(plan.name)} · ${Planner.GOALS[plan.goal].label} · ${day.exercises.length} 个动作</div>
         ${startBtn}
