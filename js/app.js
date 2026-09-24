@@ -25,7 +25,13 @@ const App = {
   init() {
     document.querySelectorAll('.tabbar button').forEach(b => {
       b.addEventListener('click', () => {
-        if (Workout.session && !confirm('正在进行训练，切换页面将保留进度（可从今日页继续）')) return;
+        if (Workout.session) {
+          // 训练中切页：进度保留在内存，仅首次提示，不阻塞
+          if (!Workout._navHinted) {
+            Workout._navHinted = true;
+            toast('训练进度已保留，回「今日」点「继续训练」');
+          }
+        }
         this.go(b.dataset.page);
       });
     });

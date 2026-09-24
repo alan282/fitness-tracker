@@ -7,6 +7,7 @@ const Workout = {
   start(dayIdx) {
     const plan = DB.getPlan();
     const day = plan.days[dayIdx];
+    this._navHinted = false; // 重置切页提示
     this.session = {
       dayIdx, dayName: day.name,
       startTime: new Date().toISOString(),

@@ -59,12 +59,20 @@ const Pages = {
       </div>`;
     }).join('');
 
+    // 进行中的训练：按钮改为「继续训练」，直接回训练页不重建进度
+    const active = Workout.session;
+    const activeSameDay = active && active.dayIdx === dayIdx;
+    const startBtn = active
+      ? `<button class="btn" style="background:var(--ok,#22a06b)" onclick="App.go('workout')">继续训练（进行中）</button>`
+      : `<button class="btn" onclick="Workout.start(${dayIdx})">开始训练</button>`;
+
     el.innerHTML = `
       <div class="today-hero">
         <div class="label">今日训练 · 第 ${dayIdx + 1}/${plan.days.length} 天</div>
         <div class="day-name">${esc(day.name)}</div>
         <div class="meta">${esc(plan.name)} · ${Planner.GOALS[plan.goal].label} · ${day.exercises.length} 个动作</div>
-        <button class="btn" onclick="Workout.start(${dayIdx})">开始训练</button>
+        ${startBtn}
+        ${active && !activeSameDay ? '<div style="font-size:11px;color:var(--warn,#c77700);margin-top:6px">进行中的训练是「' + esc(active.dayName) + '」，点继续将回到该训练</div>' : ''}
       </div>
       <div class="stat-grid">
         <div class="stat-cell"><div class="num">${workouts.length}</div><div class="lbl">累计训练</div></div>

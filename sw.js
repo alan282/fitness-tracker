@@ -43,6 +43,11 @@ self.addEventListener('fetch', e => {
         caches.open(CACHE).then(c => c.put(e.request, copy));
         return res;
       })
-      .catch(() => caches.match(e.request, { ignoreSearch: true }).then(hit => hit || caches.match('./index.html')))
+      .catch(() => caches.match(e.request, { ignoreSearch: true }).then(hit => {
+        if (hit) return hit;
+        // 缓存也未命中：页面导航回退到外壳；JS/CSS 不回退 HTML（避免 HTML 被当脚本执行导致整页空白）
+        if (e.request.mode === 'navigate') return caches.match('./index.html');
+        return new Response('offline', { status: 503, statusText: 'Offline' });
+      }))
   );
 });
