@@ -32,9 +32,9 @@ const Pages = {
     const day = plan.days[dayIdx];
     const workouts = DB.getWorkouts();
 
-    // 数据易失环境提示（微信内浏览器的本地存储不持久，杀掉微信数据即丢失）
+    // 数据易失环境提示（微信内浏览器的本地存储不持久，杀掉微信数据即丢失；原生 APP 无此问题）
     let storageHint = '';
-    if (!localStorage.getItem('gym_storage_hint_ok')) {
+    if (!window.Capacitor && !localStorage.getItem('gym_storage_hint_ok')) {
       const ua = navigator.userAgent;
       const inWeChat = /MicroMessenger/i.test(ua);
       const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);

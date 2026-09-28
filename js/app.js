@@ -37,11 +37,12 @@ const App = {
     });
     if (!DB.isSetupDone()) this.wizard();
     else this.go('today');
-    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    // Capacitor 原生 APP（离线壳）内不需要 Service Worker；仅浏览器/PWA 环境注册
+    if (!window.Capacitor && 'serviceWorker' in navigator && location.protocol !== 'file:') {
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
-    // 申请持久存储：安装使用时向系统表明数据是用户重要数据，避免被自动清理
-    if (navigator.storage && navigator.storage.persist) {
+    // 申请持久存储（浏览器/PWA 环境；原生 APP 本地存储天然持久）
+    if (!window.Capacitor && navigator.storage && navigator.storage.persist) {
       navigator.storage.persist().catch(() => {});
     }
   },
@@ -162,6 +163,7 @@ const App = {
         </div>
       </div>
 
+      ${window.Capacitor ? '' : `
       <div class="card">
         <h3>添加到手机桌面</h3>
         <div id="install-hint" style="font-size:12px;color:var(--text-2);margin-bottom:10px">
@@ -169,7 +171,7 @@ const App = {
         </div>
         <button class="btn small primary" id="install-btn" onclick="App._install()" style="display:none">一键安装到桌面</button>
         <div id="install-guide" style="display:none"></div>
-      </div>
+      </div>`}
 
       <div class="card">
         <h3>数据备份</h3>
@@ -221,6 +223,7 @@ const App = {
   // 设置页渲染时刷新安装区状态
   _refreshInstallUI() {
     this._bindInstall();
+    if (window.Capacitor) return; // 原生 APP 无需安装引导
     const btn = document.getElementById('install-btn');
     const guide = document.getElementById('install-guide');
     const hint = document.getElementById('install-hint');
@@ -252,6 +255,12 @@ const App = {
     const ua = navigator.userAgent;
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
     const paint = ok => {
+      if (window.Capacitor) {
+        el.textContent = '存储状态：本地 APP 私有存储，完全离线可用，数据随 APP 持久保存（卸载 APP 会删除数据）';
+        el.style.color = '';
+        el.style.display = '';
+        return;
+      }
       const kw = /MicroMessenger/i.test(ua);
       if (kw) {
         el.textContent = '⚠ 当前在微信内打开：数据不会保留，关闭微信即丢失。请点右上角「···」在浏览器打开，或安装到桌面使用。';
