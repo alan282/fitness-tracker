@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "io.github.alan282.fitassistant",
+    "sha256_cert_fingerprints": [
+      "D1:17:58:09:F5:19:21:0C:29:73:39:E1:81:36:3C:1D:13:20:E6:A0:EE:E8:04:83:59:89:81:DC:9A:7A:E5:F1"
+    ]
+  }
+}]
