@@ -39,36 +39,33 @@ const Planner = {
     endurance:   { label: '肌耐力减脂', main: { sets: 3, reps: '12-15', rest: 60 }, assist: { sets: 3, reps: '15-20', rest: 45 } },
   },
 
-  // 动作模式（中英文正则，kind=exercise）
-  PATTERNS: {
-    pullup:      /pull-?up|pullup|chin|引体/i,
-    pulldown:    /pulldown|下拉/i,
-    row:         /row|划船/i,
-    bench:       /bench press|卧推/i,
-    inclinepress: /incline (?:hammer |one arm |close grip |wide grip )?press|incline bench|上斜(?!划船|弯举)/i,
-    pushup:      /push.?up|俯卧撑|dip|臂屈伸/i,
-    ohp:         /(overhead|military|shoulder) press|推举(?!卷腹)|侧推/i,
-    lateral:     /lateral raise|side lateral|侧平举/i,
-    squat:       /squat|深蹲/i,
-    deadlift:    /deadlift|硬拉/i,
-    lunge:       /lunge|箭步/i,
-    curl:        /curl|弯举/i,
-    triceps:     /pushdown|下压|triceps|肱三/i,
-    calf:        /calf|提踵/i,
-    core:        /crunch|卷腹|plank|平板|leg raise|举腿|sit-?up|twist|转体|收腿/i,
-    fly:         /fly|crossover|夹胸|飞鸟/i,
-    reardelt:    /rear delt|后束/i,
-    wrist:       /wrist|腕/i,
+  // 动作白名单（教练逐一核对动作库后的有效动作池，按推荐顺序排列；选动作与替换候选只从这里出）
+  POOL: {
+    pullup:      ['0017', '1326', '0253', '0140', '0970', '3019', '1432', '0015'],           // 引体：器械辅助→反握→中立握→弹力带辅助→凳上辅助
+    pulldown:    ['0198', '0150', '0197', '0245', '2616', '0177', '3563', '0974', '1013', '0983'], // 高位下拉：标准→直杆→宽杆→反手→V杆→绳把→单臂→弹力带
+    row:         ['0027', '0292', '0293', '0327', '0049', '0064', '0118', '3017', '0248', '1344', '0861', '0180', '0213', '0214', '0218', '0234', '0139', '1359', '0189', '0988', '1323'], // 划船：杠铃→哑铃→上斜支撑→单臂→彭德莱→绳索坐姿→澳式→史密斯→弹力带
+    bench:       ['0025', '0289', '0748', '0151', '0033', '0301', '0122', '0030', '0352', '0751', '1254'], // 卧推：杠铃平→哑铃平→史密斯→绳索→下斜→宽握/窄握→对握→弹力带
+    inclinepress: ['0047', '0314', '0169', '0324'],                                          // 上斜推：杠铃→哑铃→绳索→对握
+    pushup:      ['0251', '1430', '2462', '0009', '0279', '1274', '0259', '0283', '0975'],   // 双杠臂屈伸→俯卧撑系（下斜/深/窄距/钻石/弹力带）
+    ohp:         ['0091', '1457', '1456', '0290', '2137', '0219', '0587', '0997'],           // 肩推：杠铃坐姿→站姿宽/窄→哑铃坐姿→阿诺德→绳索→器械→弹力带
+    lateral:     ['0334', '0178'],                                                            // 侧平举：哑铃→绳索
+    squat:       ['1436', '1435', '0042', '0043', '0046', '0534', '1760', '0533', '1004'],   // 深蹲：高杠→低杠→前蹲→全蹲→哈克→高脚杯(壶铃/哑铃)→壶铃前蹲→弹力带
+    deadlift:    ['0032', '0811', '0117', '0085', '0116', '0074', '0300', '0752', '0578', '0157', '1009'], // 硬拉：传统→六角杠→相扑→罗马尼亚→直腿→架上→哑铃→史密斯→器械→绳索→弹力带
+    lunge:       ['0336', '0078', '0054', '1410'],                                            // 箭步蹲：哑铃→杠铃后撤→杠铃前跨→侧向
+    curl:        ['0031', '0447', '0294', '0285', '0313', '0297', '0315', '0070', '0868'],   // 弯举：杠铃→曲杆→哑铃→交替→锤式→集中→上斜→托板→绳索
+    triceps:     ['0201', '0200', '0207', '0241', '1723', '0019'],                            // 三头：绳索下压系→器械辅助臂屈伸
+    calf:        ['2289', '1370', '1379', '1393', '0833'],                                    // 提踵：器械→杠铃站姿→哑铃坐姿→史密斯单腿→驴式
+    core:        ['0570', '0583', '0014'],                                                    // 核心：收腿→器械转体→俄罗斯转体
+    fly:         ['0308', '2144'],                                                            // 飞鸟：哑铃→绳索夹胸
+    reardelt:    ['0202', '0203', '0233', '1328', '0076', '3697', '1022'],                   // 后束：绳索划船系→哑铃仰卧→杠铃→弹力带
+    wrist:       ['0210', '0994', '1411', '1412', '0224'],                                    // 腕弯举：绳索→弹力带→杠铃正/反握
   },
 
   // 复合主项模式（决定组次档位与排序权重）
   MAIN_PATTERNS: ['pullup', 'pulldown', 'row', 'bench', 'inclinepress', 'pushup', 'ohp', 'squat', 'deadlift', 'lunge'],
 
-  // 器械优先级（自由重量优先）
-  EQUIP_PRIORITY: ['barbell', 'dumbbell', 'kettlebell', 'cable', 'smith machine', 'leverage machine', 'body weight', 'trap bar', 'olympic barbell', 'ez barbell', 'band', 'medicine ball', 'stability ball', 'rope', 'sled machine', 'weighted'],
-
-  // 风险/不适动作排除（颈后推举/颈后下拉对肩关节不友好；高翻类爆发力动作技术门槛高，不入自动方案）
-  EXCLUDE_RE: /behind (the )?head|behind neck|颈后|clean and press|clean-grip|高翻/,
+  // 风险/不适动作排除（颈后推举/下拉、高翻类、布拉德福德推举绕头、断头台卧推对肩关节不友好）
+  EXCLUDE_RE: /behind (the )?head|behind neck|颈后|clean and press|clean-grip|高翻|bradford|布拉德福德|断头台|guillotine/i,
 
   // 放松拉伸：部位 → 拉伸动作 id 映射（kind=stretch，均经图文一致性核对）
   COOLDOWN_MAP: {
@@ -83,30 +80,21 @@ const Planner = {
     'neck':       ['0716'],
   },
 
-  _score(ex) {
-    let s = 0;
-    const pri = this.EQUIP_PRIORITY.indexOf(ex.equipment);
-    s += pri >= 0 ? (14 - pri) * 0.3 : 0;
-    return s;
-  },
-
-  // 按「模式或组」选动作：组内任一模式匹配、器材可用、未用过；组内首个模式优先（如 ['pullup','pulldown'] 引体优先于下拉）
+  // 按白名单选动作：组内模式按序尝试（如 ['pullup','pulldown'] 引体优先于下拉），池内按推荐顺序取第一个可用项
   _pickPattern(groupKeys, usedIds, dayEquipCount) {
-    let best = null, bestScore = -1;
-    for (const ex of EXERCISES) {
-      if (ex.kind !== 'exercise' || usedIds.has(ex.id)) continue;
-      if (!DB.hasEquipment(ex.equipment)) continue;
-      if (this.EXCLUDE_RE.test(ex.name + ex.name_zh)) continue;
-      // 肩推不匹配下斜（下斜推是胸动作）
-      if (groupKeys.includes('ohp') && /decline|下斜/.test(ex.name + ex.name_zh)) continue;
-      // 同天同器械最多 2 个，保证多样性
-      if (dayEquipCount && (dayEquipCount.get(ex.equipment) || 0) >= 2) continue;
-      const hitIdx = groupKeys.findIndex(k => this.PATTERNS[k] && this.PATTERNS[k].test(ex.name + ' ' + ex.name_zh));
-      if (hitIdx < 0) continue;
-      const sc = this._score(ex) + (groupKeys.length > 1 ? (groupKeys.length - hitIdx) * 2 : 0);
-      if (sc > bestScore) { best = ex; bestScore = sc; }
+    for (const k of groupKeys) {
+      const pool = this.POOL[k] || [];
+      for (const id of pool) {
+        const ex = getEx(id);
+        if (!ex || usedIds.has(id)) continue;
+        if (!DB.hasEquipment(ex.equipment)) continue;
+        if (this.EXCLUDE_RE.test(ex.name + ex.name_zh)) continue;
+        // 同天同器械最多 4 个（保证多样性的同时，哑铃/自重家用场景不误伤）
+        if (dayEquipCount && (dayEquipCount.get(ex.equipment) || 0) >= 4) continue;
+        return ex;
+      }
     }
-    return best;
+    return null;
   },
 
   // 生成完整方案
@@ -157,13 +145,13 @@ const Planner = {
     ];
   },
 
-  // 放松节：当日模式涉及部位 → 静态拉伸动作
+  // 放松节：当日模式涉及部位 → 静态拉伸动作（库里无二头拉伸，弯举不映射上臂，背部拉伸已覆盖拉日）
   _buildCooldown(patterns) {
     const partByPattern = {
       pullup: 'back', pulldown: 'back', row: 'back',
       bench: 'chest', inclinepress: 'chest', pushup: 'chest', fly: 'chest',
       ohp: 'shoulders', lateral: 'shoulders', reardelt: 'shoulders',
-      curl: 'upper arms', triceps: 'upper arms', wrist: 'lower arms',
+      triceps: 'upper arms', wrist: 'lower arms',
       squat: 'upper legs', deadlift: 'upper legs', lunge: 'upper legs', calf: 'lower legs',
       core: 'waist',
     };
@@ -227,20 +215,28 @@ const Planner = {
     return null;
   },
 
-  // 替换动作：同模式优先，其次同部位
+  // 替换动作：只从同一模式的白名单池里出（每个都是核对过的有效动作）；拉伸在拉伸池内同部位替换
   alternatives(exId) {
     const cur = getEx(exId);
-    const curPattern = Object.keys(this.PATTERNS).find(k => this.PATTERNS[k].test(cur.name + ' ' + cur.name_zh));
+    if (!cur) return [];
+    // 拉伸：同部位的其他拉伸（拉伸池全部核对过）
+    if (cur.kind === 'stretch') {
+      return EXERCISES.filter(e => e.kind === 'stretch' && e.id !== exId && e.category === cur.category);
+    }
+    // 当前动作在白名单内：同模式池 = 真有效替换
+    const poolKey = Object.keys(this.POOL).find(k => this.POOL[k].includes(exId));
+    if (poolKey) {
+      return this.POOL[poolKey]
+        .filter(id => id !== exId)
+        .map(id => getEx(id))
+        .filter(ex => ex && DB.hasEquipment(ex.equipment) && !this.EXCLUDE_RE.test(ex.name + ex.name_zh));
+    }
+    // 旧方案动作不在白名单（如已删除/历史方案）：同部位白名单动作兜底，保证给出的仍是有效动作
+    const anyPool = new Set(Object.values(this.POOL).flat());
     return EXERCISES.filter(e =>
-      e.id !== exId &&
-      e.kind !== 'stretch' &&
-      e.category === cur.category &&
-      DB.hasEquipment(e.equipment) &&
-      !this.EXCLUDE_RE.test(e.name + e.name_zh)
-    ).sort((a, b) => {
-      const sa = (curPattern && this.PATTERNS[curPattern].test(a.name + ' ' + a.name_zh) ? 3 : 0) + this._score(a);
-      const sb = (curPattern && this.PATTERNS[curPattern].test(b.name + ' ' + b.name_zh) ? 3 : 0) + this._score(b);
-      return sb - sa;
-    }).slice(0, 12);
+      e.id !== exId && e.kind !== 'stretch' &&
+      e.category === cur.category && anyPool.has(e.id) &&
+      DB.hasEquipment(e.equipment) && !this.EXCLUDE_RE.test(e.name + e.name_zh)
+    );
   },
 };
