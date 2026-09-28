@@ -71,9 +71,9 @@ const Pages = {
         <img class="thumb" src="${ex.img}" loading="lazy" alt="">
         <div class="info">
           <div class="nm">${esc(ex.name_zh)}</div>
-          <div class="sub">${zh(ex.equipment)} · ${zh(ex.target)}${sug ? ' · 建议 ' + sug + 'kg' : ''}</div>
+          <div class="sub"><span class="tag equip">${zh(ex.equipment)}</span><span class="tag cat">${zh(ex.target)}</span>${sug ? '<span>建议 ' + sug + 'kg</span>' : ''}</div>
         </div>
-        <div class="sets-info"><b>${item.sets}</b> 组 × <b>${item.reps}</b> 次</div>
+        <div class="sets-info"><b>${item.sets}</b> 组 × <b>${item.reps}</b> 次<br><span style="font-size:10px;color:var(--text-3)">详情 ›</span></div>
       </div>`;
     }).join('');
 
@@ -81,8 +81,8 @@ const Pages = {
     const active = Workout.session;
     const activeSameDay = active && active.dayIdx === dayIdx;
     const startBtn = active
-      ? `<button class="btn" onclick="App.go('workout')">继续训练</button>`
-      : `<button class="btn" onclick="Workout.start(${dayIdx})">开始训练</button>`;
+      ? `<button class="btn" onclick="App.go('workout')">继续训练 →</button>`
+      : `<button class="btn" onclick="Workout.start(${dayIdx})">开始训练 →</button>`;
     const activeBadge = active
       ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:#16a34a;background:#dcfce7;border-radius:999px;padding:2px 8px;margin-left:6px;vertical-align:1px"><span style="width:6px;height:6px;border-radius:50%;background:#16a34a;display:inline-block"></span>进行中</span>`
       : '';

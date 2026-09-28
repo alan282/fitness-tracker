@@ -89,23 +89,22 @@ const Workout = {
         <div class="set-no">${si + 1}</div>
         <input type="number" inputmode="decimal" step="2.5" min="0" value="${set.weight || ''}" placeholder="kg" onchange="Workout._upd(${ei},${si},'weight',this.value)">
         <input type="number" inputmode="numeric" min="0" value="${set.reps || ''}" placeholder="次" onchange="Workout._upd(${ei},${si},'reps',this.value)">
-        <label class="hint-s" style="text-align:center;font-size:11px;color:${set.done ? 'var(--ok)' : 'var(--text-3)'}">${set.done ? '已完成' : '未完成'}</label>
         <input type="checkbox" class="set-done-chk" ${set.done ? 'checked' : ''} onchange="Workout._toggle(${ei},${si},this.checked)">
       </div>`).join('');
 
     return `<div class="workout-ex ${this._openIdx === ei ? 'open' : ''}">
       <div class="we-head" onclick="Workout._toggleBlock(${ei})">
+        <span style="width:26px;height:26px;border-radius:50%;background:${allDone ? 'var(--ok-soft)' : 'var(--elevated)'};color:${allDone ? 'var(--ok)' : 'var(--text-3)'};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0">${allDone ? '✓' : ei + 1}</span>
         <img src="${ex.img}" alt="">
         <div class="info">
-          <div class="nm" style="font-size:15px;font-weight:600">${esc(ex.name_zh)}</div>
-          <div class="sub" style="font-size:12px;color:var(--text-2)">${zh(ex.equipment)} · 计划 ${entry.planSets}×${entry.planReps}</div>
+          <div class="nm" style="font-size:15px;font-weight:700;letter-spacing:-0.01em">${esc(ex.name_zh)}</div>
+          <div class="sub" style="font-size:12px;color:var(--text-3)">${zh(ex.equipment)} · 计划 <b style="color:var(--text)">${entry.planSets}×${entry.planReps}</b></div>
         </div>
-        <button class="btn small ghost" style="flex-shrink:0;padding:4px 10px;margin-left:6px" onclick="event.stopPropagation();UI.showExercise('${ex.id}')">详情</button>
-        ${allDone ? '<span class="done-mark">✓</span>' : ''}
+        <button class="btn small ghost" style="flex-shrink:0;padding:5px 11px" onclick="event.stopPropagation();UI.showExercise('${ex.id}')">详情</button>
       </div>
       <div class="we-body">
         <div class="set-grid">
-          <div class="h">组</div><div class="h">重量 kg</div><div class="h">次数</div><div class="h">状态</div><div class="h">完成</div>
+          <div class="h">组</div><div class="h">重量 kg</div><div class="h">次数</div><div class="h">完成</div>
         </div>
         ${setRows}
         <div style="display:flex;gap:8px;margin-top:10px">
