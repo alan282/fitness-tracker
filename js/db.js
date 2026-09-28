@@ -27,7 +27,7 @@ const DB = {
   },
 
   // ── 个人信息 ──
-  getProfile() { return this.get(this.KEYS.profile, { bodyweight: 65, goal: 'hypertrophy' }); },
+  getProfile() { return this.get(this.KEYS.profile, { bodyweight: 65, level: 'novice', goal: 'hypertrophy' }); },
   setProfile(p) { this.set(this.KEYS.profile, p); },
 
   // ── 方案 ──

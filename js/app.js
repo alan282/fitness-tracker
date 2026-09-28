@@ -47,35 +47,100 @@ const App = {
     }
   },
 
-  /* ── 首次启动引导 ── */
+  /* ── 首次启动引导：个人参数 → 器材 → 分化 → 目标 ── */
   wizardStep: 0,
   wizardData: {},
 
-  wizard() {
-    const el = document.getElementById('page-today');
-    this._wizardSplit(el);
+  _wizProgress(step) {
+    return `<div class="wiz-progress">${[1, 2, 3, 4].map(i => `<span class="${i <= step ? 'on' : ''}"></span>`).join('')}<b>${step}/4</b></div>`;
+  },
+  _wizNav(prevFn, nextFn, nextText) {
+    return `<div style="display:flex;gap:10px;margin-top:18px">
+      ${prevFn ? `<button class="btn ghost" style="flex:1" onclick="${prevFn}">上一步</button>` : ''}
+      <button class="btn primary" style="${prevFn ? 'flex:1.5' : 'width:100%'}" onclick="${nextFn}">${nextText}</button>
+    </div>`;
   },
 
+  wizard() {
+    const el = document.getElementById('page-today');
+    this.wizardData = {};
+    this._wizardProfile(el);
+  },
+
+  // 第 1 步：个人参数
+  _wizardProfile(el) {
+    el.innerHTML = `<div class="wizard">
+      ${this._wizProgress(1)}
+      <h2>先了解一下你</h2>
+      <div class="desc">用于估算首练重量，之后会随你的记录自动调整</div>
+      <div class="card">
+        <div class="field"><label>体重 kg</label>
+          <input type="number" id="wz-bw" value="65" min="30" max="200" placeholder="如 70"></div>
+        <div class="field"><label>训练经验</label>
+          <div class="split-cards" style="margin-top:6px">
+            ${[['novice', '刚开始练', '建议重量会保守一些，先把动作做标准'],
+               ['inter', '练过一段时间', '常规建议重量'],
+               ['adv', '老手', '建议重量适当上调']].map(([v, t, d]) => `
+              <button class="split-card" onclick="App._wizPickLevel('${v}')" data-level="${v}">
+                <div class="t">${t}</div><div class="d">${d}</div></button>`).join('')}
+          </div></div>
+      </div>
+      <div style="font-size:11px;color:var(--text-3);margin-top:10px">点选经验水平后进入下一步（体重可稍后在设置里改）</div>
+    </div>`;
+  },
+  _wizPickLevel(v) {
+    const bw = parseFloat(document.getElementById('wz-bw').value);
+    this.wizardData.bodyweight = (bw >= 30 && bw <= 200) ? bw : 65;
+    this.wizardData.level = v;
+    this._wizardEquip(document.getElementById('page-today'));
+  },
+
+  // 第 2 步：器械
+  _wizardEquip(el) {
+    const equips = [...new Set(EXERCISES.map(e => e.equipment))].sort();
+    el.innerHTML = `<div class="wizard">
+      ${this._wizProgress(2)}
+      <h2>你的健身房有哪些器械</h2>
+      <div class="desc">不勾选则默认全部可用；勾选后方案只从这些器械中生成</div>
+      <div class="card" id="wiz-equip-list">
+        ${equips.map(e => `<div class="equip-item">
+          <input type="checkbox" id="wz-${e.replace(/\s/g, '_')}" data-equip="${e}">
+          <label class="nm" for="wz-${e.replace(/\s/g, '_')}">${zh(e)}</label>
+        </div>`).join('')}
+      </div>
+      ${this._wizNav("App._wizardProfile(document.getElementById('page-today'))", "App._wizCollectEquip()", '下一步')}
+    </div>`;
+  },
+  _wizCollectEquip() {
+    this.wizardData.equipChecked = [...document.querySelectorAll('#wiz-equip-list input:checked')].map(i => i.dataset.equip);
+    this._wizardSplit(document.getElementById('page-today'));
+  },
+
+  // 第 3 步：分化
   _wizardSplit(el) {
     el.innerHTML = `<div class="wizard">
-      <h2>创建你的训练方案</h2>
-      <div class="desc">三步完成：选择分化 → 训练目标 → 确认器械</div>
+      ${this._wizProgress(3)}
+      <h2>每周练几天</h2>
+      <div class="desc">决定训练日怎么分组，随时可在设置里换</div>
       <div class="split-cards">
         ${[3, 4, 5].map(n => {
           const s = Planner.SPLITS[n];
-          return `<button class="split-card" data-n="${n}" onclick="App._wizPickSplit(${n})">
+          return `<button class="split-card" onclick="App._wizPickSplit(${n})">
             <div class="t">${s.name}</div>
             <div class="d">适合每周 ${n} 练，${n === 3 ? '恢复时间充裕，适合时间紧张或新手' : n === 4 ? '兼顾频率与容量，最常见的进阶选择' : '单肌群刺激最充分，适合时间充裕的老手'}</div>
             <div class="days">${s.days.map(d => d.name.split(' ')[0]).join(' → ')}</div>
           </button>`;
         }).join('')}
       </div>
+      <button class="btn ghost" style="margin-top:14px" onclick="App._wizardEquip(document.getElementById('page-today'))">上一步</button>
     </div>`;
   },
   _wizPickSplit(n) { this.wizardData.split = n; this._wizardGoal(document.getElementById('page-today')); },
 
+  // 第 4 步：目标 → 生成
   _wizardGoal(el) {
     el.innerHTML = `<div class="wizard">
+      ${this._wizProgress(4)}
       <h2>训练目标</h2>
       <div class="desc">决定每个动作的组数、次数与组间休息</div>
       <div class="split-cards">
@@ -85,39 +150,27 @@ const App = {
             <div class="d">${g.sets} 组 × ${g.reps} 次 · 组间休息 ${g.rest}s</div>
           </button>`).join('')}
       </div>
-      <button class="btn ghost" onclick="App._wizardSplit(document.getElementById('page-today'))">上一步</button>
+      <button class="btn ghost" style="margin-top:14px" onclick="App._wizardSplit(document.getElementById('page-today'))">上一步</button>
     </div>`;
   },
-  _wizPickGoal(k) { this.wizardData.goal = k; this._wizardEquip(document.getElementById('page-today')); },
+  _wizPickGoal(k) { this.wizardData.goal = k; this._wizardFinish(); },
 
-  _wizardEquip(el) {
-    const equips = [...new Set(EXERCISES.map(e => e.equipment))].sort();
-    el.innerHTML = `<div class="wizard">
-      <h2>你的健身房有哪些器械</h2>
-      <div class="desc">不勾选则默认全部可用；勾选后方案只从这些器械中生成</div>
-      <div class="card" id="wiz-equip-list">
-        ${equips.map(e => `<div class="equip-item">
-          <input type="checkbox" id="wz-${e.replace(/\s/g, '_')}" data-equip="${e}">
-          <label class="nm" for="wz-${e.replace(/\s/g, '_')}">${zh(e)}</label>
-        </div>`).join('')}
-      </div>
-      <div style="display:flex;gap:10px;margin-top:16px">
-        <button class="btn ghost" style="flex:1" onclick="App._wizardGoal(document.getElementById('page-today'))">上一步</button>
-        <button class="btn primary" style="flex:1" onclick="App._wizardFinish()">生成方案</button>
-      </div>
-    </div>`;
-  },
   _wizardFinish() {
-    const checked = [...document.querySelectorAll('#wiz-equip-list input:checked')].map(i => i.dataset.equip);
+    // 保存个人参数
+    const old = DB.getProfile();
+    DB.setProfile({ ...old, bodyweight: this.wizardData.bodyweight || old.bodyweight, level: this.wizardData.level || old.level, goal: this.wizardData.goal || old.goal });
+    // 保存器械
+    const checked = this.wizardData.equipChecked || [];
     const hasAll = checked.length === 0;
     const items = {};
     checked.forEach(e => { items[e] = {}; });
     DB.setEquipment({ hasAll, items });
+    // 生成方案
     const { split, goal } = this.wizardData;
     DB.setPlan(Planner.generate(split, goal));
     DB.setPlanState({ dayCursor: 0 });
     DB.finishSetup();
-    toast('方案已生成');
+    toast('方案已生成，从「开始训练」开始你的第一练');
     this.go('today');
   },
 
@@ -132,6 +185,12 @@ const App = {
         <h3>个人参数</h3>
         <div class="field"><label>体重 kg（用于首练重量估算）</label>
           <input type="number" id="st-bw" value="${profile.bodyweight}" onchange="App._saveProfile()"></div>
+        <div class="field"><label>训练经验（影响建议重量）</label>
+          <select id="st-level" onchange="App._saveProfile()">
+            <option value="novice" ${profile.level === 'novice' ? 'selected' : ''}>刚开始练（建议重量保守）</option>
+            <option value="inter" ${(profile.level || 'inter') === 'inter' ? 'selected' : ''}>练过一段时间（常规）</option>
+            <option value="adv" ${profile.level === 'adv' ? 'selected' : ''}>老手（适当上调）</option>
+          </select></div>
         <div class="field"><label>训练目标</label>
           <select id="st-goal" onchange="App._saveProfile()">
             ${Object.entries(Planner.GOALS).map(([k, g]) => `<option value="${k}" ${profile.goal === k ? 'selected' : ''}>${g.label}</option>`).join('')}
@@ -284,6 +343,8 @@ const App = {
   _saveProfile() {
     const p = DB.getProfile();
     p.bodyweight = parseFloat(document.getElementById('st-bw').value) || p.bodyweight;
+    const lv = document.getElementById('st-level');
+    if (lv) p.level = lv.value;
     p.goal = document.getElementById('st-goal').value;
     DB.setProfile(p);
   },

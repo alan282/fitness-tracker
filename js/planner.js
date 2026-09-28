@@ -204,7 +204,10 @@ const Planner = {
         return topW;
       }
     }
-    const bw = DB.getProfile().bodyweight || 65;
+    const profile = DB.getProfile();
+    const bw = profile.bodyweight || 65;
+    // 训练经验系数：新手保守起步，有经验正常，老手上调
+    const lvK = { novice: 0.75, inter: 1, adv: 1.15 }[profile.level] || 1;
     const name = ex.name + ' ' + (ex.name_zh || '');
     const ratios = [
       [/deadlift|硬拉/, 0.75],
@@ -219,7 +222,7 @@ const Planner = {
       [/calf|提踵/, 0.20],
     ];
     for (const r of ratios) {
-      if (r[0].test(name)) return Math.max(2.5, Math.round(bw * r[1] / 2.5) * 2.5);
+      if (r[0].test(name)) return Math.max(2.5, Math.round(bw * r[1] * lvK / 2.5) * 2.5);
     }
     return null;
   },
