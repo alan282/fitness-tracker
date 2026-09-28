@@ -278,6 +278,34 @@ body.modal-open { overflow: hidden; }
 }
 .filter-bar select:focus { border-color: var(--accent); }
 
+/* ── 方案页动作卡片（名称独占顶部一行） ── */
+.plan-ex {
+  background: var(--surface); border-radius: var(--r-md);
+  padding: var(--s-3); margin-bottom: var(--s-2);
+  box-shadow: var(--shadow-sm);
+}
+.plan-ex-top {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.plan-ex-top .nm { font-size: var(--fs-h3); font-weight: 700; letter-spacing: -0.01em; display: flex; align-items: center; gap: 6px; }
+.plan-ex-top .go { font-size: var(--fs-tiny); color: var(--text-3); font-weight: 500; flex-shrink: 0; }
+.plan-ex-body { display: flex; align-items: center; gap: var(--s-3); }
+.plan-ex-body .thumb { width: 60px; height: 45px; border-radius: var(--r-sm); object-fit: cover; background: var(--elevated); flex-shrink: 0; cursor: pointer; }
+.plan-ex-body .tags { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 4px; }
+.plan-ex-body .w-edit { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.plan-ex-body .w-edit input {
+  width: 58px; padding: 8px 4px; text-align: center;
+  border: 1.5px solid var(--border); border-radius: var(--r-sm);
+  font-size: var(--fs-body); font-weight: 600; outline: none;
+}
+.plan-ex-body .w-edit input:focus { border-color: var(--accent); }
+.plan-ex-body .w-edit span { font-size: var(--fs-tiny); color: var(--text-3); }
+.plan-ex-body .sets-info { font-size: var(--fs-small); color: var(--text-3); text-align: center; font-weight: 500; flex-shrink: 0; min-width: 44px; }
+.plan-ex-body .sets-info b { color: var(--text); font-size: var(--fs-body); font-weight: 700; }
+.plan-ex-body .btn.small { padding: 6px 10px; flex-shrink: 0; }
+
 /* ── 底部弹窗 ── */
 .overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,.55);

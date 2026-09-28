@@ -121,18 +121,19 @@ const Pages = {
         const ex = getEx(item.exId); if (!ex) return '';
         const sug = Planner.suggestWeight(ex);
         const curW = item.weight != null ? item.weight : sug;
-        return `<div class="ex-row">
-          <img class="thumb" src="${ex.img}" loading="lazy" alt="" onclick="UI.showExercise('${ex.id}')">
-          <div class="info" onclick="UI.showExercise('${ex.id}')">
+        return `<div class="plan-ex">
+          <div class="plan-ex-top" onclick="UI.showExercise('${ex.id}')">
             <div class="nm">${esc(ex.name_zh)}${item.isMain === false ? ' <span class="tag">辅</span>' : ''}</div>
-            <div class="sub">${zh(ex.equipment)} · ${zh(ex.target)}</div>
+            <span class="go">详情 ›</span>
           </div>
-          <div class="act">
-            <label class="w-edit" style="display:flex;align-items:center;gap:3px">
-              <input type="number" inputmode="decimal" step="2.5" min="0" value="${curW != null ? curW : ''}" placeholder="—" style="width:52px;padding:5px 4px;text-align:center;border:1px solid var(--border);border-radius:6px;font-size:13px;outline:none" onchange="UI._setPlanWeight(${i},${j},this.value)">
-              <span style="font-size:11px;color:var(--text-3)">kg</span>
+          <div class="plan-ex-body">
+            <img class="thumb" src="${ex.img}" loading="lazy" alt="" onclick="UI.showExercise('${ex.id}')">
+            <div class="tags"><span class="tag equip">${zh(ex.equipment)}</span><span class="tag cat">${zh(ex.target)}</span></div>
+            <label class="w-edit">
+              <input type="number" inputmode="decimal" step="2.5" min="0" value="${curW != null ? curW : ''}" placeholder="—" onchange="UI._setPlanWeight(${i},${j},this.value)">
+              <span>kg</span>
             </label>
-            <div class="sets-info"><b>${item.sets}</b>×<b>${item.reps}</b><br><span style="font-size:11px">${item.rest}s</span></div>
+            <div class="sets-info"><b>${item.sets}</b>×<b>${item.reps}</b><br><span>${item.rest}s</span></div>
             <button class="btn small ghost" onclick="UI.swapExercise(${i},${j})">换</button>
           </div>
         </div>`;
@@ -208,7 +209,7 @@ const Pages = {
           <div class="nm">${esc(ex.name_zh)}</div>
           <div class="sub">${zh(ex.equipment)} · ${zh(ex.target)}</div>
         </div>
-        <div class="tag" ${ex.kind === 'stretch' ? 'style="background:#e8f0fb;color:#3b6ea5"' : ''}>${ex.kind === 'stretch' ? '拉伸' : zh(ex.category)}</div>
+        <span class="tag ${ex.kind === 'stretch' ? '' : 'cat'}" ${ex.kind === 'stretch' ? 'style="background:#e8f0fb;color:#3b6ea5"' : ''}>${ex.kind === 'stretch' ? '拉伸' : zh(ex.category)}</span>
       </div>`).join('')}
     `;
   },
@@ -218,6 +219,12 @@ const Pages = {
   stats(el) {
     const workouts = DB.getWorkouts();
     const body = DB.getBody();
+
+    // 无训练记录：只显示空状态，不渲染空图表
+    if (workouts.length === 0) {
+      el.innerHTML = '<div class="empty"><div class="big">📊</div><p style="font-weight:600;color:var(--text-2)">还没有训练记录</p><p style="font-size:13px;margin-top:4px">完成第一次训练后，容量趋势和动作重量曲线会出现在这里</p></div>';
+      return;
+    }
 
     // 周容量（近 12 周）
     const weekMap = new Map();
@@ -244,7 +251,6 @@ const Pages = {
     const trainedIdsFiltered = trainedIds.filter(id => getEx(id));
 
     el.innerHTML = `
-      ${workouts.length === 0 ? '<div class="empty"><div class="big">无数据</div><p>完成第一次训练后，这里会出现你的数据</p></div>' : ''}
       <div class="chart-box">
         <h3>每周训练容量</h3>
         <div class="hint-s">近 12 周 · kg</div>
@@ -401,6 +407,7 @@ const UI = {
   },
 };
 
+let _sheetOpen = false;
 function openSheet(html) {
   let overlay = document.getElementById('sheet-overlay');
   if (!overlay) {
@@ -414,9 +421,25 @@ function openSheet(html) {
   document.getElementById('sheet-content').innerHTML = html;
   overlay.classList.add('open');
   document.body.classList.add('modal-open');
+  // 侧滑返回拦截：pushState 占位，Android 侧滑返回手势/返回键先关弹窗而不是退出 APP
+  _sheetOpen = true;
+  history.pushState({ sheet: true }, '', location.href);
 }
 function closeSheet() {
   const o = document.getElementById('sheet-overlay');
   if (o) o.classList.remove('open');
   document.body.classList.remove('modal-open');
+  if (_sheetOpen) {
+    _sheetOpen = false;
+    history.back(); // 平衡 pushState 占位
+  }
 }
+// 全局返回手势/返回键：弹窗开着时只关弹窗（popstate 已消费历史，不再 back）
+window.addEventListener('popstate', () => {
+  if (_sheetOpen) {
+    _sheetOpen = false;
+    const o = document.getElementById('sheet-overlay');
+    if (o) o.classList.remove('open');
+    document.body.classList.remove('modal-open');
+  }
+});
