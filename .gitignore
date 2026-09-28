@@ -1,0 +1,7 @@
+# 构建产物与密钥（不入库）
+android.keystore
+*.apk
+# 构建临时
+_*.log
+_run_build.py
+_build_apk.js
