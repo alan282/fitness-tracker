@@ -67,7 +67,7 @@ const Pages = {
     const exList = day.exercises.map(item => {
       const ex = getEx(item.exId); if (!ex) return '';
       const sug = Planner.suggestWeight(ex);
-      return `<div class="ex-row">
+      return `<div class="ex-row" style="cursor:pointer" onclick="UI.showExercise('${ex.id}')">
         <img class="thumb" src="${ex.img}" loading="lazy" alt="">
         <div class="info">
           <div class="nm">${esc(ex.name_zh)}</div>

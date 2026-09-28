@@ -100,6 +100,7 @@ const Workout = {
           <div class="nm" style="font-size:15px;font-weight:600">${esc(ex.name_zh)}</div>
           <div class="sub" style="font-size:12px;color:var(--text-2)">${zh(ex.equipment)} · 计划 ${entry.planSets}×${entry.planReps}</div>
         </div>
+        <button class="btn small ghost" style="flex-shrink:0;padding:4px 10px;margin-left:6px" onclick="event.stopPropagation();UI.showExercise('${ex.id}')">详情</button>
         ${allDone ? '<span class="done-mark">✓</span>' : ''}
       </div>
       <div class="we-body">
