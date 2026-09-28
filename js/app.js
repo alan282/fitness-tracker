@@ -40,6 +40,10 @@ const App = {
     if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
+    // 申请持久存储：安装使用时向系统表明数据是用户重要数据，避免被自动清理
+    if (navigator.storage && navigator.storage.persist) {
+      navigator.storage.persist().catch(() => {});
+    }
   },
 
   /* ── 首次启动引导 ── */
@@ -169,6 +173,7 @@ const App = {
 
       <div class="card">
         <h3>数据备份</h3>
+        <div id="storage-status" style="font-size:12px;color:var(--text-2);margin-bottom:10px;display:none"></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn small" onclick="App._exportData()">导出备份</button>
           <label class="btn small ghost" style="cursor:pointer">导入备份
@@ -179,7 +184,7 @@ const App = {
       </div>
       <div style="text-align:center;font-size:11px;color:var(--text-3);padding:8px 0 20px">健身助手 · 本地数据版 · ${EXERCISES.length} 动作库<br>动作图片与演示 © Gym visual</div>
     `;
-    setTimeout(() => this._refreshInstallUI(), 0);
+    setTimeout(() => { this._refreshInstallUI(); this._refreshStorageStatus(); }, 0);
   },
 
   /* ── 添加到主屏幕 ── */
@@ -238,6 +243,33 @@ const App = {
     guide.innerHTML = '<div style="font-size:12px;color:var(--text-2);line-height:1.8">' + guideHtml + '</div>';
     guide.style.display = '';
     if (hint) hint.style.display = '';
+  },
+
+  // 设置页渲染时刷新存储状态行
+  _refreshStorageStatus() {
+    const el = document.getElementById('storage-status');
+    if (!el) return;
+    const ua = navigator.userAgent;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+    const paint = ok => {
+      const kw = /MicroMessenger/i.test(ua);
+      if (kw) {
+        el.textContent = '⚠ 当前在微信内打开：数据不会保留，关闭微信即丢失。请点右上角「···」在浏览器打开，或安装到桌面使用。';
+        el.style.color = '#c77700';
+      } else if (ok) {
+        el.textContent = '存储状态：已获得系统持久化授权，数据不会被自动清理（删除桌面图标仍会删除数据）';
+      } else if (isStandalone) {
+        el.textContent = '存储状态：桌面 APP 独立存储，持久保存（删除图标会连同数据一起删除，重要数据建议定期导出）';
+      } else {
+        el.textContent = '存储状态：浏览器本地存储（添加到手机桌面后为独立持久存储，更稳）';
+      }
+      el.style.display = '';
+    };
+    if (navigator.storage && navigator.storage.persisted) {
+      navigator.storage.persisted().then(paint).catch(() => paint(false));
+    } else {
+      paint(false);
+    }
   },
 
   _saveProfile() {
