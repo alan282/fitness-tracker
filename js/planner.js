@@ -8,7 +8,7 @@ const Planner = {
       days: [
         { name: '拉日（背 + 二头）', patterns: [['pullup', 'pulldown'], ['row'], ['row'], ['pulldown'], ['curl'], ['curl'], ['core']] },
         { name: '推日（胸肩 + 三头）', patterns: [['bench'], ['inclinepress'], ['pushup'], ['ohp'], ['lateral'], ['triceps']] },
-        { name: '腿日', patterns: [['squat'], ['squat'], ['deadlift'], ['lunge'], ['calf'], ['core']] },
+        { name: '腿日', patterns: [['squat'], ['glute'], ['deadlift'], ['lunge'], ['calf'], ['core']] },
       ],
     },
     4: {
@@ -17,7 +17,7 @@ const Planner = {
         { name: '胸部 + 肱三', patterns: [['bench'], ['inclinepress'], ['pushup'], ['fly'], ['triceps'], ['triceps']] },
         { name: '背部 + 肱二', patterns: [['pullup', 'pulldown'], ['row'], ['row'], ['pulldown'], ['curl'], ['curl']] },
         { name: '肩部 + 核心', patterns: [['ohp'], ['ohp'], ['lateral'], ['reardelt'], ['core'], ['core']] },
-        { name: '腿部', patterns: [['squat'], ['squat'], ['deadlift'], ['lunge'], ['calf'], ['core']] },
+        { name: '腿部', patterns: [['squat'], ['glute'], ['deadlift'], ['lunge'], ['calf'], ['core']] },
       ],
     },
     5: {
@@ -27,7 +27,7 @@ const Planner = {
         { name: '背部日', patterns: [['pullup', 'pulldown'], ['row'], ['row'], ['pulldown'], ['pulldown']] },
         { name: '肩部日', patterns: [['ohp'], ['ohp'], ['lateral'], ['lateral'], ['reardelt']] },
         { name: '手臂日', patterns: [['curl'], ['curl'], ['triceps'], ['triceps'], ['wrist']] },
-        { name: '腿部日', patterns: [['squat'], ['squat'], ['deadlift'], ['lunge'], ['calf'], ['core']] },
+        { name: '腿部日', patterns: [['squat'], ['glute'], ['deadlift'], ['lunge'], ['calf'], ['core']] },
       ],
     },
   },
@@ -52,6 +52,7 @@ const Planner = {
     squat:       ['1436', '1435', '0042', '0043', '0046', '0534', '1760', '0533', '1004'],   // 深蹲：高杠→低杠→前蹲→全蹲→哈克→高脚杯(壶铃/哑铃)→壶铃前蹲→弹力带
     deadlift:    ['0032', '0811', '0117', '0085', '0116', '0074', '0300', '0752', '0578', '0157', '1009'], // 硬拉：传统→六角杠→相扑→罗马尼亚→直腿→架上→哑铃→史密斯→器械→绳索→弹力带
     lunge:       ['0336', '0078', '0054', '1410'],                                            // 箭步蹲：哑铃→杠铃后撤→杠铃前跨→侧向
+    glute:       ['0058', '0196', '1408', '0991'],                                            // 臀部专项：杠铃臀冲→绳索胯下上拉→弹力带臀桥→弹力带胯下上拉
     curl:        ['0031', '0447', '0294', '0285', '0313', '0297', '0315', '0070', '0868'],   // 弯举：杠铃→曲杆→哑铃→交替→锤式→集中→上斜→托板→绳索
     triceps:     ['0201', '0200', '0207', '0241', '1723', '0019'],                            // 三头：绳索下压系→器械辅助臂屈伸
     calf:        ['2289', '1370', '1379', '1393', '0833'],                                    // 提踵：器械→杠铃站姿→哑铃坐姿→史密斯单腿→驴式
@@ -62,7 +63,7 @@ const Planner = {
   },
 
   // 复合主项模式（决定组次档位与排序权重）
-  MAIN_PATTERNS: ['pullup', 'pulldown', 'row', 'bench', 'inclinepress', 'pushup', 'ohp', 'squat', 'deadlift', 'lunge'],
+  MAIN_PATTERNS: ['pullup', 'pulldown', 'row', 'bench', 'inclinepress', 'pushup', 'ohp', 'squat', 'deadlift', 'lunge', 'glute'],
 
   // 风险/不适动作排除（颈后推举/下拉、高翻类、布拉德福德推举绕头、断头台卧推对肩关节不友好）
   EXCLUDE_RE: /behind (the )?head|behind neck|颈后|clean and press|clean-grip|高翻|bradford|布拉德福德|断头台|guillotine/i,
@@ -153,6 +154,7 @@ const Planner = {
       ohp: 'shoulders', lateral: 'shoulders', reardelt: 'shoulders',
       triceps: 'upper arms', wrist: 'lower arms',
       squat: 'upper legs', deadlift: 'upper legs', lunge: 'upper legs', calf: 'lower legs',
+      glute: 'upper legs',
       core: 'waist',
     };
     const parts = [];
@@ -199,6 +201,7 @@ const Planner = {
     const name = ex.name + ' ' + (ex.name_zh || '');
     const ratios = [
       [/deadlift|硬拉/, 0.75],
+      [/hip thrust|提髋|臀冲|臀桥|胯下/, 0.5],
       [/squat(?!.*jump)|深蹲(?!跳)/, 0.55],
       [/bench press|卧推/, 0.45],
       [/row|划船/, 0.40],
