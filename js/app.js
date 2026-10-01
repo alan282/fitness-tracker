@@ -243,9 +243,63 @@ const App = {
           <button class="btn small ghost" style="color:#b91c1c" onclick="App._resetAll()">清空全部数据</button>
         </div>
       </div>
+      <div class="card">
+        <h3>版本与更新</h3>
+        <div style="font-size:12px;color:var(--text-2);margin-bottom:10px">当前版本 <b>v2.0.0</b> · ${EXERCISES.length} 动作全量库</div>
+        <div id="update-status" style="display:none;font-size:13px;padding:10px 12px;border-radius:8px;margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn small" id="btn-check-update" onclick="App._checkUpdate()">检查更新</button>
+          <a class="btn small ghost" id="btn-download-update" style="display:none;text-decoration:none" target="_blank" rel="noopener">下载新版本</a>
+        </div>
+      </div>
       <div style="text-align:center;font-size:11px;color:var(--text-3);padding:8px 0 20px">健身助手 · 本地数据版 · ${EXERCISES.length} 动作库<br>动作图片与演示 © Gym visual · 数据集 exercises-dataset</div>
     `;
     setTimeout(() => { this._refreshInstallUI(); this._refreshStorageStatus(); }, 0);
+  },
+
+  _checkUpdate() {
+    const st = document.getElementById('update-status');
+    const btn = document.getElementById('btn-check-update');
+    const dl = document.getElementById('btn-download-update');
+    if (!st || !btn) return;
+    st.style.display = 'block';
+    st.style.background = 'var(--elevated)';
+    st.style.color = 'var(--text-2)';
+    st.textContent = '正在检查更新…';
+    btn.disabled = true;
+    const RESET = () => { btn.disabled = false; };
+    fetch('https://api.github.com/repos/alan282/fitness-tracker/releases/latest', { headers: { 'Accept': 'application/vnd.github+json' } })
+      .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(rel => {
+        const tag = (rel.tag_name || '').replace(/^v/, '');
+        if (!tag) { st.textContent = '无法获取版本信息'; RESET(); return; }
+        const cmp = (a, b) => a.localeCompare(b, undefined, { numeric: true });
+        if (cmp(tag, '2.0.0') > 0) {
+          st.style.background = 'var(--accent-soft)';
+          st.style.color = 'var(--accent)';
+          st.textContent = '发现新版本 v' + tag + (rel.name ? ' · ' + rel.name : '');
+          if (dl) {
+            const apk = (rel.assets || []).find(a => /\.apk$/i.test(a.name));
+            dl.href = apk ? apk.browser_download_url : (rel.html_url || 'https://github.com/alan282/fitness-tracker/releases');
+            dl.style.display = 'inline-flex';
+            dl.classList.remove('ghost');
+            dl.classList.add('primary');
+          }
+          toast('发现新版本 v' + tag);
+        } else {
+          st.style.background = 'var(--ok-soft)';
+          st.style.color = 'var(--ok)';
+          st.textContent = '已是最新版本（v2.0.0）';
+        }
+        RESET();
+      })
+      .catch(() => {
+        // 离线 APP 无法访问 GitHub API（完全离线是设计目标，此为可选功能）
+        st.style.background = 'var(--warn-soft)';
+        st.style.color = 'var(--warn)';
+        st.textContent = '检查失败：无法连接更新服务器（离线环境属正常，可稍后在有网络时重试）';
+        RESET();
+      });
   },
 
   /* ── 添加到主屏幕 ── */
