@@ -245,7 +245,7 @@ const App = {
       </div>
       <div class="card">
         <h3>版本与更新</h3>
-        <div style="font-size:12px;color:var(--text-2);margin-bottom:10px">当前版本 <b>v2.0.0</b> · ${EXERCISES.length} 动作全量库</div>
+        <div style="font-size:12px;color:var(--text-2);margin-bottom:10px">当前版本 <b>v2.0.1</b> · ${EXERCISES.length} 动作全量库</div>
         <div id="update-status" style="display:none;font-size:13px;padding:10px 12px;border-radius:8px;margin-bottom:10px"></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn small" id="btn-check-update" onclick="App._checkUpdate()">检查更新</button>
@@ -274,7 +274,7 @@ const App = {
         const tag = (rel.tag_name || '').replace(/^v/, '');
         if (!tag) { st.textContent = '无法获取版本信息'; RESET(); return; }
         const cmp = (a, b) => a.localeCompare(b, undefined, { numeric: true });
-        if (cmp(tag, '2.0.0') > 0) {
+        if (cmp(tag, '2.0.1') > 0) {
           st.style.background = 'var(--accent-soft)';
           st.style.color = 'var(--accent)';
           st.textContent = '发现新版本 v' + tag + (rel.name ? ' · ' + rel.name : '');
@@ -289,7 +289,7 @@ const App = {
         } else {
           st.style.background = 'var(--ok-soft)';
           st.style.color = 'var(--ok)';
-          st.textContent = '已是最新版本（v2.0.0）';
+          st.textContent = '已是最新版本（v2.0.1）';
         }
         RESET();
       })
