@@ -1,5 +1,7 @@
 /* ── 主控制器：路由 + 首次引导 + 设置页 ── */
 
+const APP_VERSION = '2.1.1';
+
 const App = {
   go(page) {
     Pages.current = null;
@@ -245,11 +247,12 @@ const App = {
       </div>
       <div class="card">
         <h3>版本与更新</h3>
-        <div style="font-size:12px;color:var(--text-2);margin-bottom:10px">当前版本 <b>v2.0.1</b> · ${EXERCISES.length} 动作全量库</div>
+        <div style="font-size:12px;color:var(--text-2);margin-bottom:10px">当前版本 <b>v2.1.0</b> · ${EXERCISES.length} 动作全量库</div>
         <div id="update-status" style="display:none;font-size:13px;padding:10px 12px;border-radius:8px;margin-bottom:10px"></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn small" id="btn-check-update" onclick="App._checkUpdate()">检查更新</button>
-          <a class="btn small ghost" id="btn-download-update" style="display:none;text-decoration:none" target="_blank" rel="noopener">下载新版本</a>
+          <a class="btn small ghost" href="https://github.com/alan282/fitness-tracker/releases" target="_blank" rel="noopener" style="text-decoration:none">下载完整安装包</a>
+          <span id="hot-note" style="display:none;font-size:11px;color:var(--text-3);align-self:center">热更新自动下载，重启生效</span>
         </div>
       </div>
       <div style="text-align:center;font-size:11px;color:var(--text-3);padding:8px 0 20px">健身助手 · 本地数据版 · ${EXERCISES.length} 动作库<br>动作图片与演示 © Gym visual · 数据集 exercises-dataset</div>
@@ -268,36 +271,39 @@ const App = {
     st.textContent = '正在检查更新…';
     btn.disabled = true;
     const RESET = () => { btn.disabled = false; };
-    fetch('https://api.github.com/repos/alan282/fitness-tracker/releases/latest', { headers: { 'Accept': 'application/vnd.github+json' } })
+    const CMP = (a, b) => {
+      const xs = a.replace(/^v/, '').split('.'), ys = b.replace(/^v/, '').split('.');
+      for (let i = 0; i < Math.max(xs.length, ys.length); i++) {
+        const x = parseInt(xs[i]) || 0, y = parseInt(ys[i]) || 0;
+        if (x !== y) return x < y ? -1 : 1;
+      }
+      return 0;
+    };
+    fetch('https://alan282.github.io/fitness-tracker/hotupdate/manifest.json')
       .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
-      .then(rel => {
-        const tag = (rel.tag_name || '').replace(/^v/, '');
-        if (!tag) { st.textContent = '无法获取版本信息'; RESET(); return; }
-        const cmp = (a, b) => a.localeCompare(b, undefined, { numeric: true });
-        if (cmp(tag, '2.0.1') > 0) {
+      .then(m => {
+        const v = (m.version || '').replace(/^v/, '');
+        if (!v) { st.textContent = '无法获取版本信息'; RESET(); return; }
+        if (CMP(v, APP_VERSION) > 0) {
+          const mb = m.size ? (m.size / 1048576).toFixed(1) + ' MB' : '';
           st.style.background = 'var(--accent-soft)';
           st.style.color = 'var(--accent)';
-          st.textContent = '发现新版本 v' + tag + (rel.name ? ' · ' + rel.name : '');
-          if (dl) {
-            const apk = (rel.assets || []).find(a => /\.apk$/i.test(a.name));
-            dl.href = apk ? apk.browser_download_url : (rel.html_url || 'https://github.com/alan282/fitness-tracker/releases');
-            dl.style.display = 'inline-flex';
-            dl.classList.remove('ghost');
-            dl.classList.add('primary');
-          }
-          toast('发现新版本 v' + tag);
+          st.textContent = '新版本 v' + v + (mb ? '（' + mb + '）' : '') + (m.note ? ' · ' + m.note : '');
+          // 热更新：原生侧自动下载，重启生效
+          const dl2 = document.getElementById('hot-note');
+          if (dl2) dl2.style.display = 'inline-flex';
+          toast('v' + v + ' 将自动下载，装好后重启生效');
         } else {
           st.style.background = 'var(--ok-soft)';
           st.style.color = 'var(--ok)';
-          st.textContent = '已是最新版本（v2.0.1）';
+          st.textContent = '已是最新版本（v' + APP_VERSION + '）';
         }
         RESET();
       })
       .catch(() => {
-        // 离线 APP 无法访问 GitHub API（完全离线是设计目标，此为可选功能）
         st.style.background = 'var(--warn-soft)';
         st.style.color = 'var(--warn)';
-        st.textContent = '检查失败：无法连接更新服务器（离线环境属正常，可稍后在有网络时重试）';
+        st.textContent = '检查失败：无法连接更新服务器（离线训练不受影响）';
         RESET();
       });
   },
