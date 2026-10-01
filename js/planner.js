@@ -171,6 +171,22 @@ const Planner = {
     }));
   },
 
+  // 减载判断：该动作连续 2 次未达到目标次数（重量停滞信号）
+  isDeload(ex) {
+    if (!ex) return false;
+    const hist = DB.historyOf(ex.id);
+    if (hist.length < 2) return false;
+    const goal = DB.getProfile().goal;
+    const repTarget = goal === 'strength' ? 5 : goal === 'endurance' ? 18 : 8;
+    const last2 = hist.slice(-2);
+    return last2.every(h => {
+      const sets = h.sets.filter(s => s.reps > 0);
+      if (!sets.length) return false;
+      const avgReps = sets.reduce((a, s) => a + s.reps, 0) / sets.length;
+      return avgReps < repTarget;
+    });
+  },
+
   // 计算建议重量
   suggestWeight(ex) {
     if (!ex) return null;
@@ -187,6 +203,10 @@ const Planner = {
         const avgReps = lastSets.reduce((a, s) => a + s.reps, 0) / lastSets.length;
         const goal = DB.getProfile().goal;
         const repTarget = goal === 'strength' ? 5 : goal === 'endurance' ? 18 : 8;
+        // 连续 2 次未达标：减载 10%，恢复后重新渐进
+        if (this.isDeload(ex)) {
+          return Math.max(2.5, Math.round(topW * 0.9 * 2) / 2);
+        }
         if (avgReps >= repTarget) {
           const isLower = ['upper legs', 'lower legs', 'waist'].includes(ex.category);
           return Math.round((topW + (isLower ? 5 : 2.5)) * 2) / 2;

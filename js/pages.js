@@ -71,7 +71,7 @@ const Pages = {
         <img class="thumb" src="${ex.img}" loading="lazy" alt="">
         <div class="info">
           <div class="nm">${esc(ex.name_zh)}</div>
-          <div class="sub"><span class="tag equip">${zh(ex.equipment)}</span><span class="tag cat">${zh(ex.target)}</span>${sug ? '<span>建议 ' + sug + 'kg</span>' : ''}</div>
+          <div class="sub"><span class="tag equip">${zh(ex.equipment)}</span><span class="tag cat">${zh(ex.target)}</span>${sug ? '<span>建议 ' + sug + 'kg' + (Planner.isDeload(ex) ? '（减载周）' : '') + '</span>' : ''}</div>
         </div>
         <div class="sets-info"><b>${item.sets}</b> 组 × <b>${item.reps}</b> 次<br><span style="font-size:10px;color:var(--text-3)">详情 ›</span></div>
       </div>`;
