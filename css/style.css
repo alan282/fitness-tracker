@@ -286,14 +286,16 @@ body.modal-open { overflow: hidden; }
 }
 .plan-ex-top {
   display: flex; align-items: center; justify-content: space-between;
+  gap: 6px;
   margin-bottom: 8px; cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.plan-ex-top .nm { font-size: var(--fs-h3); font-weight: 700; letter-spacing: -0.01em; display: flex; align-items: center; gap: 6px; }
+.plan-ex-top .nm { flex: 1; min-width: 0; font-size: var(--fs-h3); font-weight: 700; letter-spacing: -0.01em; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; line-height: 1.4; }
+.plan-ex-top .nm .tag { flex-shrink: 0; }
 .plan-ex-top .go { font-size: var(--fs-tiny); color: var(--text-3); font-weight: 500; flex-shrink: 0; }
 .plan-ex-body { display: flex; align-items: center; gap: var(--s-3); }
 .plan-ex-body .thumb { width: 60px; height: 45px; border-radius: var(--r-sm); object-fit: cover; background: var(--elevated); flex-shrink: 0; cursor: pointer; }
-.plan-ex-body .tags { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 4px; }
+.plan-ex-body-info { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: var(--s-2); }
 .plan-ex-body .w-edit { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 .plan-ex-body .w-edit input {
   width: 58px; padding: 8px 4px; text-align: center;

@@ -123,17 +123,18 @@ const Pages = {
         const curW = item.weight != null ? item.weight : sug;
         return `<div class="plan-ex">
           <div class="plan-ex-top" onclick="UI.showExercise('${ex.id}')">
-            <div class="nm">${esc(ex.name_zh)}${item.isMain === false ? ' <span class="tag">辅</span>' : ''}</div>
+            <div class="nm">${esc(ex.name_zh)}${item.isMain === false ? ' <span class="tag">辅</span>' : ''} <span class="tag equip">${zh(ex.equipment)}</span> <span class="tag cat">${zh(ex.target)}</span></div>
             <span class="go">详情 ›</span>
           </div>
           <div class="plan-ex-body">
             <img class="thumb" src="${ex.img}" loading="lazy" alt="" onclick="UI.showExercise('${ex.id}')">
-            <div class="tags"><span class="tag equip">${zh(ex.equipment)}</span><span class="tag cat">${zh(ex.target)}</span></div>
-            <label class="w-edit">
-              <input type="number" inputmode="decimal" step="2.5" min="0" value="${curW != null ? curW : ''}" placeholder="—" onchange="UI._setPlanWeight(${i},${j},this.value)">
-              <span>kg</span>
-            </label>
-            <div class="sets-info"><b>${item.sets}</b>×<b>${item.reps}</b><br><span>${item.rest}s</span></div>
+            <div class="plan-ex-body-info">
+              <label class="w-edit">
+                <input type="number" inputmode="decimal" step="2.5" min="0" value="${curW != null ? curW : ''}" placeholder="—" onchange="UI._setPlanWeight(${i},${j},this.value)">
+                <span>kg</span>
+              </label>
+              <div class="sets-info"><b>${item.sets}</b>×<b>${item.reps}</b><br><span>${item.rest}s</span></div>
+            </div>
             <button class="btn small ghost" onclick="UI.swapExercise(${i},${j})">换</button>
           </div>
         </div>`;
@@ -375,11 +376,33 @@ const UI = {
     openSheet(`
       <h2>替换动作</h2>
       <div class="hint-s" style="font-size:12px;color:var(--text-2);margin-bottom:10px">当前：${esc(getEx(item.exId).name_zh)}</div>
-      ${alts.map(a => `<div class="ex-row" onclick="UI._doSwap(${dayIdx},${itemIdx},'${a.id}')">
+      <input id="swap-search" type="text" placeholder="搜索全部动作…" oninput="UI._swapSearch(${dayIdx},${itemIdx},this.value)" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;outline:none;margin-bottom:4px">
+      <div class="hint-s" style="font-size:11px;color:var(--text-3);margin:4px 2px 8px">下方为同模式推荐（${alts.length} 个）；搜索可从全部动作中选择</div>
+      <div id="swap-list">${alts.map(a => `<div class="ex-row" onclick="UI._doSwap(${dayIdx},${itemIdx},'${a.id}')">
         <img class="thumb" src="${a.img}" loading="lazy" alt="">
         <div class="info"><div class="nm">${esc(a.name_zh)}</div><div class="sub">${zh(a.equipment)} · ${zh(a.target)}</div></div>
-      </div>`).join('')}
+        <span class="tag main">推荐</span>
+      </div>`).join('')}</div>
     `);
+  },
+  _swapSearch(dayIdx, itemIdx, q) {
+    const list = document.getElementById('swap-list');
+    if (!list) return;
+    q = (q || '').trim().toLowerCase();
+    if (!q) {
+      // 无搜索词：恢复推荐列表
+      this.swapExercise(dayIdx, itemIdx);
+      return;
+    }
+    const cur = DB.getPlan().days[dayIdx].exercises[itemIdx].exId;
+    const hits = EXERCISES.filter(e => {
+      if (e.kind === 'stretch' || e.id === cur) return false;
+      return (e.name_zh + ' ' + e.name).toLowerCase().includes(q);
+    }).slice(0, 30);
+    list.innerHTML = hits.length ? hits.map(a => `<div class="ex-row" onclick="UI._doSwap(${dayIdx},${itemIdx},'${a.id}')">
+      <img class="thumb" src="${a.img}" loading="lazy" alt="">
+      <div class="info"><div class="nm">${esc(a.name_zh)}</div><div class="sub">${zh(a.equipment)} · ${zh(a.target)}</div></div>
+    </div>`).join('') : '<div class="empty" style="padding:20px"><p>没有匹配的动作</p></div>';
   },
   _setPlanWeight(dayIdx, itemIdx, val) {
     const plan = DB.getPlan();
