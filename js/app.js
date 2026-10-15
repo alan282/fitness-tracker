@@ -1,6 +1,6 @@
 /* ── 主控制器：路由 + 首次引导 + 设置页 ── */
 
-const APP_VERSION = '2.1.2';
+const APP_VERSION = '2.2.0';
 
 const App = {
   go(page) {
@@ -263,7 +263,6 @@ const App = {
   _checkUpdate() {
     const st = document.getElementById('update-status');
     const btn = document.getElementById('btn-check-update');
-    const dl = document.getElementById('btn-download-update');
     if (!st || !btn) return;
     st.style.display = 'block';
     st.style.background = 'var(--elevated)';
@@ -271,28 +270,16 @@ const App = {
     st.textContent = '正在检查更新…';
     btn.disabled = true;
     const RESET = () => { btn.disabled = false; };
-    const CMP = (a, b) => {
-      const xs = a.replace(/^v/, '').split('.'), ys = b.replace(/^v/, '').split('.');
-      for (let i = 0; i < Math.max(xs.length, ys.length); i++) {
-        const x = parseInt(xs[i]) || 0, y = parseInt(ys[i]) || 0;
-        if (x !== y) return x < y ? -1 : 1;
-      }
-      return 0;
-    };
     fetch('https://alan282.github.io/fitness-tracker/hotupdate/manifest.json')
       .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
       .then(m => {
         const v = (m.version || '').replace(/^v/, '');
         if (!v) { st.textContent = '无法获取版本信息'; RESET(); return; }
-        if (CMP(v, APP_VERSION) > 0) {
-          const mb = m.size ? (m.size / 1048576).toFixed(1) + ' MB' : '';
+        if (App._cmpVer(v, APP_VERSION) > 0) {
           st.style.background = 'var(--accent-soft)';
           st.style.color = 'var(--accent)';
-          st.textContent = '新版本 v' + v + (mb ? '（' + mb + '）' : '') + (m.note ? ' · ' + m.note : '');
-          // 热更新：原生侧自动下载，重启生效
-          const dl2 = document.getElementById('hot-note');
-          if (dl2) dl2.style.display = 'inline-flex';
-          toast('v' + v + ' 将自动下载，装好后重启生效');
+          st.textContent = '发现新版本 v' + v;
+          App._askUpdate(m, v);
         } else {
           st.style.background = 'var(--ok-soft)';
           st.style.color = 'var(--ok)';
@@ -307,6 +294,73 @@ const App = {
         RESET();
       });
   },
+
+  _cmpVer(a, b) {
+    const xs = String(a).replace(/^v/, '').split('.'), ys = String(b).replace(/^v/, '').split('.');
+    for (let i = 0; i < Math.max(xs.length, ys.length); i++) {
+      const x = parseInt(xs[i]) || 0, y = parseInt(ys[i]) || 0;
+      if (x !== y) return x < y ? -1 : 1;
+    }
+    return 0;
+  },
+
+  /** 新版本确认弹窗 */
+  _askUpdate(m, v) {
+    const size = m.size ? (m.size < 1048576 ? (m.size / 1024).toFixed(0) + ' KB' : (m.size / 1048576).toFixed(1) + ' MB') : '';
+    openSheet(`
+      <h2>发现新版本 v${v}</h2>
+      <div style="font-size:14px;color:var(--text-2);line-height:1.7;margin-bottom:6px">
+        ${m.note ? esc(m.note) + '<br>' : ''}
+        更新包：${size} · ${m.files || 0} 个文件
+      </div>
+      <div style="font-size:12px;color:var(--text-3);margin-bottom:18px">更新在 APP 内完成，不会丢失训练数据</div>
+      <div style="display:flex;gap:10px">
+        <button class="btn ghost block" onclick="closeSheet()">稍后</button>
+        <button class="btn primary block" onclick="App._startUpdate('${v}')">立即更新</button>
+      </div>
+    `);
+  },
+
+  /** 开始更新：显示进度弹窗 */
+  async _startUpdate(v) {
+    const HU = (window.Capacitor && window.Capacitor.registerPlugin) ? window.Capacitor.registerPlugin('HotUpdate') : null;
+    if (!HU) {
+      toast('更新需在 APP 内完成（浏览器版本请下载安装包）');
+      closeSheet();
+      return;
+    }
+    openSheet(`
+      <h2>正在更新</h2>
+      <div id="upd-stage" style="font-size:13px;color:var(--text-2);margin-bottom:10px">准备中…</div>
+      <div style="background:var(--elevated);border-radius:999px;height:8px;overflow:hidden">
+        <div id="upd-bar" style="height:100%;width:0%;background:var(--accent);border-radius:999px;transition:width .2s"></div>
+      </div>
+      <div id="upd-pct" style="font-size:20px;font-weight:800;text-align:center;margin-top:12px;font-variant-numeric:tabular-nums">0%</div>
+    `);
+    try {
+      if (!App._updListener) {
+        App._updListener = await HU.addListener('progress', e => {
+          const bar = document.getElementById('upd-bar');
+          const pct = document.getElementById('upd-pct');
+          const stage = document.getElementById('upd-stage');
+          if (e.error) {
+            if (stage) stage.textContent = '更新失败：' + e.error;
+            if (bar) bar.style.background = 'var(--danger)';
+            return;
+          }
+          const p = Math.max(0, Math.min(100, e.percent || 0));
+          if (bar) bar.style.width = p + '%';
+          if (pct) pct.textContent = p + '%';
+          if (stage) stage.textContent = p >= 100 ? '更新完成，正在载入新版本…' : (e.stage || '下载中');
+        });
+      }
+      await HU.start({ version: v });
+    } catch (e) {
+      const stage = document.getElementById('upd-stage');
+      if (stage) stage.textContent = '更新失败：' + (e.message || '未知错误');
+    }
+  },
+
 
   /* ── 添加到主屏幕 ── */
   _deferredPrompt: null,
