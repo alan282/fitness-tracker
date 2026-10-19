@@ -5,3 +5,6 @@ android.keystore
 _*.log
 _run_build.py
 _build_apk.js
+
+# 已转码为 WebP，原 GIF 不再入库
+media/*.gif
