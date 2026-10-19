@@ -1,1 +1,1 @@
-{"version":"2.2.2","zipUrl":"https://alan282.github.io/fitness-tracker/hotupdate/update.zip","size":16354,"files":3,"note":"替换动作支持按部位/器材筛选"}
+{"version":"2.3.0","zipUrl":"https://alan282.github.io/fitness-tracker/hotupdate/update.zip","size":20668,"files":5,"note":"接入 Capacitor 运行时，修复 APP 内更新桥接"}
