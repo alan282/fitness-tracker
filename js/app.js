@@ -270,8 +270,7 @@ const App = {
     st.textContent = '正在检查更新…';
     btn.disabled = true;
     const RESET = () => { btn.disabled = false; };
-    fetch('https://alan282.github.io/fitness-tracker/hotupdate/manifest.json')
-      .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+    App._fetchManifest()
       .then(m => {
         const v = (m.version || '').replace(/^v/, '');
         if (!v) { st.textContent = '无法获取版本信息'; RESET(); return; }
@@ -293,6 +292,24 @@ const App = {
         st.textContent = '检查失败：无法连接更新服务器（离线训练不受影响）';
         RESET();
       });
+  },
+
+  /** 多源容错：GitHub Pages 主源，jsDelivr CDN 备源 */
+  async _fetchManifest() {
+    const sources = [
+      'https://alan282.github.io/fitness-tracker/hotupdate/manifest.json',
+      'https://cdn.jsdelivr.net/gh/alan282/fitness-tracker@main/hotupdate/manifest.json',
+      'https://fastly.jsdelivr.net/gh/alan282/fitness-tracker@main/hotupdate/manifest.json',
+    ];
+    let lastErr = null;
+    for (const u of sources) {
+      try {
+        const r = await fetch(u + (u.includes('?') ? '&' : '?') + '_=' + Date.now());
+        if (r.ok) return await r.json();
+        lastErr = new Error(String(r.status));
+      } catch (e) { lastErr = e; }
+    }
+    throw lastErr || new Error('无法获取版本信息');
   },
 
   _cmpVer(a, b) {
