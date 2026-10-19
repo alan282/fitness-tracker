@@ -373,11 +373,23 @@ const UI = {
     const plan = DB.getPlan();
     const item = plan.days[dayIdx].exercises[itemIdx];
     const alts = Planner.alternatives(item.exId);
+    const cats = [...new Set(EXERCISES.map(e => e.category))].sort();
+    const equips = [...new Set(EXERCISES.map(e => e.equipment))].sort();
     openSheet(`
       <h2>替换动作</h2>
       <div class="hint-s" style="font-size:12px;color:var(--text-2);margin-bottom:10px">当前：${esc(getEx(item.exId).name_zh)}</div>
-      <input id="swap-search" type="text" placeholder="搜索全部动作…" oninput="UI._swapSearch(${dayIdx},${itemIdx},this.value)" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;outline:none;margin-bottom:4px">
-      <div class="hint-s" style="font-size:11px;color:var(--text-3);margin:4px 2px 8px">下方为同模式推荐（${alts.length} 个）；搜索可从全部动作中选择</div>
+      <input id="swap-search" type="text" placeholder="搜索全部动作…" oninput="UI._swapFilter(${dayIdx},${itemIdx})" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;outline:none;margin-bottom:8px">
+      <div class="filter-bar" style="margin-bottom:8px">
+        <select id="swap-cat" onchange="UI._swapFilter(${dayIdx},${itemIdx})">
+          <option value="">全部部位</option>
+          ${cats.map(c => `<option value="${c}">${zh(c)}</option>`).join('')}
+        </select>
+        <select id="swap-equip" onchange="UI._swapFilter(${dayIdx},${itemIdx})">
+          <option value="">全部器材</option>
+          ${equips.map(c => `<option value="${c}">${zh(c)}</option>`).join('')}
+        </select>
+      </div>
+      <div class="hint-s" style="font-size:11px;color:var(--text-3);margin:0 2px 8px">下方为同模式推荐（${alts.length} 个）；搜索或筛选可从全部动作中挑选</div>
       <div id="swap-list">${alts.map(a => `<div class="ex-row" onclick="UI._doSwap(${dayIdx},${itemIdx},'${a.id}')">
         <img class="thumb" src="${a.img}" loading="lazy" alt="">
         <div class="info"><div class="nm">${esc(a.name_zh)}</div><div class="sub">${zh(a.equipment)} · ${zh(a.target)}</div></div>
@@ -385,24 +397,29 @@ const UI = {
       </div>`).join('')}</div>
     `);
   },
-  _swapSearch(dayIdx, itemIdx, q) {
-    const list = document.getElementById('swap-list');
-    if (!list) return;
-    q = (q || '').trim().toLowerCase();
-    if (!q) {
-      // 无搜索词：恢复推荐列表
-      this.swapExercise(dayIdx, itemIdx);
-      return;
-    }
+  _swapFilter(dayIdx, itemIdx) {
+    const q = (document.getElementById('swap-search') || {}).value || '';
+    const cat = (document.getElementById('swap-cat') || {}).value || '';
+    const eq = (document.getElementById('swap-equip') || {}).value || '';
+    const listEl = document.getElementById('swap-list');
+    if (!listEl) return;
+    const kw = q.trim().toLowerCase();
+    // 无搜索无筛选：恢复推荐列表
+    if (!kw && !cat && !eq) { this.swapExercise(dayIdx, itemIdx); return; }
     const cur = DB.getPlan().days[dayIdx].exercises[itemIdx].exId;
     const hits = EXERCISES.filter(e => {
       if (e.kind === 'stretch' || e.id === cur) return false;
-      return (e.name_zh + ' ' + e.name).toLowerCase().includes(q);
-    }).slice(0, 30);
-    list.innerHTML = hits.length ? hits.map(a => `<div class="ex-row" onclick="UI._doSwap(${dayIdx},${itemIdx},'${a.id}')">
+      if (cat && e.category !== cat) return false;
+      if (eq && e.equipment !== eq) return false;
+      if (kw && !(e.name_zh + ' ' + e.name).toLowerCase().includes(kw)) return false;
+      return true;
+    }).slice(0, 40);
+    const head = `<div class="hint-s" style="font-size:11px;color:var(--text-3);margin:0 2px 8px">匹配 ${hits.length} 个动作${hits.length >= 40 ? '（仅显示前 40 个，可继续输入缩小范围）' : ''}</div>`;
+    listEl.innerHTML = hits.length ? head + hits.map(a => `<div class="ex-row" onclick="UI._doSwap(${dayIdx},${itemIdx},'${a.id}')">
       <img class="thumb" src="${a.img}" loading="lazy" alt="">
       <div class="info"><div class="nm">${esc(a.name_zh)}</div><div class="sub">${zh(a.equipment)} · ${zh(a.target)}</div></div>
-    </div>`).join('') : '<div class="empty" style="padding:20px"><p>没有匹配的动作</p></div>';
+      <span class="tag cat">${zh(a.category)}</span>
+    </div>`).join('') : '<div class="empty" style="padding:20px"><p>没有匹配的动作，试试放宽筛选</p></div>';
   },
   _setPlanWeight(dayIdx, itemIdx, val) {
     const plan = DB.getPlan();
