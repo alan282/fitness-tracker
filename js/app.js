@@ -247,7 +247,7 @@ const App = {
       </div>
       <div class="card">
         <h3>版本与更新</h3>
-        <div style="font-size:12px;color:var(--text-2);margin-bottom:10px">当前版本 <b>v' + APP_VERSION + '</b> · ${EXERCISES.length} 动作全量库</div>
+        <div style="font-size:12px;color:var(--text-2);margin-bottom:10px">当前版本 <b>v${APP_VERSION}</b> · ${EXERCISES.length} 动作全量库</div>
         <div id="update-status" style="display:none;font-size:13px;padding:10px 12px;border-radius:8px;margin-bottom:10px"></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn small" id="btn-check-update" onclick="App._checkUpdate()">检查更新</button>
