@@ -323,7 +323,8 @@ const App = {
 
   /** 开始更新：显示进度弹窗 */
   async _startUpdate(v) {
-    const HU = (window.Capacitor && window.Capacitor.registerPlugin) ? window.Capacitor.registerPlugin('HotUpdate') : null;
+    const C = window.Capacitor;
+    const HU = (C && C.isNativePlatform && C.isNativePlatform() && C.registerPlugin) ? C.registerPlugin('HotUpdate') : null;
     if (!HU) {
       toast('更新需在 APP 内完成（浏览器版本请下载安装包）');
       closeSheet();
