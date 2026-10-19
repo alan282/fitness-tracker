@@ -1,6 +1,6 @@
 /* ── 主控制器：路由 + 首次引导 + 设置页 ── */
 
-const APP_VERSION = '2.2.0';
+const APP_VERSION = '2.2.1';
 
 const App = {
   go(page) {
